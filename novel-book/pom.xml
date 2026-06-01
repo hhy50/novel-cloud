@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <parent>
+        <groupId>com.novel</groupId>
+        <artifactId>novel-book</artifactId>
+        <version>1.0.0-SNAPSHOT</version>
+        <relativePath>../pom.xml</relativePath>
+    </parent>
+
+    <artifactId>novel-book</artifactId>
+    <packaging>pom</packaging>
+    <name>novel-book</name>
+
+    <modules>
+        <module>novel-book-dto</module>
+        <module>novel-book-api</module>
+        <module>novel-book-server</module>
+    </modules>
+</project>
