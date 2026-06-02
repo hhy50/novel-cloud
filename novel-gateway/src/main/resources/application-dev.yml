@@ -1,0 +1,11 @@
+spring:
+  cloud:
+    nacos:
+      discovery:
+        server-addr: localhost:8848
+        enabled: true
+        register-enabled: true
+        fail-fast: false
+      config:
+        server-addr: localhost:8848
+        file-extension: yml

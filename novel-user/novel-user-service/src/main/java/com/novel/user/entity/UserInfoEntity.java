@@ -1,4 +1,4 @@
-package com.novel.user.model.entity;
+package com.novel.user.entity;
 
 import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableId;
@@ -7,13 +7,11 @@ import java.time.LocalDateTime;
 import lombok.Data;
 
 @Data
-@TableName("user_info")
+@TableName("t_user_info")
 public class UserInfoEntity {
 
-    @TableId(type = IdType.AUTO)
+    @TableId(type = IdType.INPUT)
     private Long id;
-
-    private String guestId;
 
     private String nickname;
 
@@ -29,9 +27,13 @@ public class UserInfoEntity {
 
     private String appVersion;
 
-    private String region;
+    private String country;
+
+    private String language;
 
     private String ip;
+
+    private String token;
 
     private LocalDateTime lastLoginTime;
 

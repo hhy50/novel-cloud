@@ -1,4 +1,4 @@
-package com.novel.book.model.entity;
+package com.novel.book.entity;
 
 import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableId;

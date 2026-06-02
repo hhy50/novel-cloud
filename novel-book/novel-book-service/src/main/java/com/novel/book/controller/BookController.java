@@ -29,7 +29,8 @@ public class BookController {
     }
 
     @PostMapping("/bookstore")
-    public Mono<R<BookstoreVo>> getBookstore(@RequestBody(required = false) BookstoreQueryDto params) {
+    public Mono<R<BookstoreVo>> getBookstore(@RequestBody(required = false) BookstoreQueryDto params) throws InterruptedException {
+        Thread.sleep(3000);
         return bookService.getBookstore(params).map(R::ok);
     }
 }

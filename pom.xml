@@ -15,7 +15,7 @@
         <module>novel-common</module>
         <module>novel-user</module>
         <module>novel-book</module>
-<!--        <module>novel-gateway</module>-->
+        <module>novel-gateway</module>
     </modules>
 
     <properties>
@@ -73,6 +73,16 @@
             <dependency>
                 <groupId>com.fasterxml.jackson.core</groupId>
                 <artifactId>jackson-databind</artifactId>
+                <version>${jackson.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.fasterxml.jackson.core</groupId>
+                <artifactId>jackson-core</artifactId>
+                <version>${jackson.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.fasterxml.jackson.core</groupId>
+                <artifactId>jackson-annotations</artifactId>
                 <version>${jackson.version}</version>
             </dependency>
             <dependency>

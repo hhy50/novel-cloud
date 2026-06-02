@@ -3,18 +3,16 @@ server:
 
 spring:
   application:
-    name: novel-book-server
+    name: novel-book-service
+  config:
+    import:
+      - optional:nacos:novel-book-service.yml?refresh=true
+      - optional:nacos:application-common.yml?group=DEFAULT_GROUP&refresh=true
   profiles:
     active: dev
-  cloud:
-    nacos:
-      discovery:
-        server-addr: 127.0.0.1:8848
-  datasource:
-    url: jdbc:mysql://127.0.0.1:3306/novel_book?useUnicode=true&characterEncoding=utf8&serverTimezone=Asia/Shanghai
-    username: root
-    password: root
-    driver-class-name: com.mysql.cj.jdbc.Driver
+sa-token:
+  token-name: Authorization #所有实例配置必须完全一致
+  timeout: 86400
 
 mybatis-plus:
   configuration:
@@ -23,13 +21,6 @@ mybatis-plus:
     db-config:
       id-type: auto
 
-shenyu:
-  client:
-    register-type: http
-    server-lists: http://127.0.0.1:9195
-    props:
-      contextPath: /book
-      appName: novel-book-server
 
 management:
   endpoints:

@@ -1,0 +1,27 @@
+server:
+  port: 8080
+
+spring:
+  application:
+    name: novel-gateway
+  config:
+    import:
+      - optional:nacos:novel-gateway.yml?refresh=true
+      - optional:nacos:application-common.yml?group=DEFAULT_GROUP&refresh=true
+  profiles:
+    active: dev
+  cloud:
+    gateway:
+      routes:
+        - id: novel-user-service
+          uri: lb://novel-user-service
+          predicates:
+            - Path=/api/user/**
+          filters:
+            - StripPrefix=0
+        - id: novel-book-service
+          uri: lb://novel-book-service
+          predicates:
+            - Path=/api/book/**
+          filters:
+            - StripPrefix=0

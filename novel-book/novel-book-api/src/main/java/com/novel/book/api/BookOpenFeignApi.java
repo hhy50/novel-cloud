@@ -7,7 +7,7 @@ import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 
-@FeignClient(name = "novel-book-server", contextId = "bookOpenFeignApi", path = "/api/open/book")
+@FeignClient(name = "novel-book-service", contextId = "bookOpenFeignApi", path = "/api/open/book")
 public interface BookOpenFeignApi {
 
     @PostMapping("/detail")
