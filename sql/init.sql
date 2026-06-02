@@ -5,17 +5,49 @@ USE novel_user;
 
 CREATE TABLE IF NOT EXISTS user_info (
     id BIGINT PRIMARY KEY AUTO_INCREMENT,
-    username VARCHAR(64) NOT NULL,
-    password VARCHAR(128) NOT NULL,
+    guest_id VARCHAR(64) NOT NULL,
     nickname VARCHAR(64) DEFAULT NULL,
     avatar VARCHAR(255) DEFAULT NULL,
     vip_status TINYINT DEFAULT 0,
+    device_id VARCHAR(128) NOT NULL,
+    device_name VARCHAR(128) DEFAULT NULL,
+    os_type VARCHAR(32) DEFAULT NULL,
+    app_version VARCHAR(32) DEFAULT NULL,
+    region VARCHAR(64) DEFAULT NULL,
+    ip VARCHAR(64) DEFAULT NULL,
+    last_login_time DATETIME DEFAULT NULL,
     create_time DATETIME DEFAULT CURRENT_TIMESTAMP,
-    update_time DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+    update_time DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    UNIQUE KEY uk_device_id (device_id),
+    UNIQUE KEY uk_guest_id (guest_id)
 );
 
-INSERT INTO user_info (username, password, nickname, avatar, vip_status)
-VALUES ('demo', '123456', '演示用户', 'https://static.example.com/avatar/default.png', 1);
+INSERT INTO user_info (
+    guest_id,
+    nickname,
+    avatar,
+    vip_status,
+    device_id,
+    device_name,
+    os_type,
+    app_version,
+    region,
+    ip,
+    last_login_time
+)
+VALUES (
+    'guest_demo_001',
+    '游客演示账号',
+    'https://static.example.com/avatar/default.png',
+    0,
+    'demo-device-id',
+    'Demo Device',
+    'android',
+    '1.0.0',
+    'CN',
+    '127.0.0.1',
+    NOW()
+);
 
 USE novel_book;
 

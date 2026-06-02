@@ -1,8 +1,8 @@
 package com.novel.user.controller;
 
 import com.novel.common.core.domain.R;
-import com.novel.user.dto.UserInfoVo;
 import com.novel.user.dto.UserLoginDto;
+import com.novel.user.dto.UserLoginVo;
 import com.novel.user.service.UserService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -22,7 +22,7 @@ public class UserController {
     private final UserService userService;
 
     @PostMapping("/login")
-    public Mono<R<UserInfoVo>> login(@Valid @RequestBody UserLoginDto params) {
+    public Mono<R<UserLoginVo>> login(@Valid @RequestBody UserLoginDto params) {
         return userService.login(params).map(R::ok);
     }
 }

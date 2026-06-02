@@ -12,9 +12,16 @@ public class UserLoginDto implements Serializable {
     @Serial
     private static final long serialVersionUID = 1L;
 
-    @NotBlank(message = "username can not be blank")
-    private String username;
+    @NotBlank(message = "deviceId can not be blank")
+    private String deviceId;
 
-    @NotBlank(message = "password can not be blank")
-    private String password;
+    private String deviceName;
+
+    private String osType;
+
+    private String appVersion;
+
+    private String region;
+
+    private String ip;
 }

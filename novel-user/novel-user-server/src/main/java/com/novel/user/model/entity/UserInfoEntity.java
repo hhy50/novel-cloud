@@ -13,15 +13,27 @@ public class UserInfoEntity {
     @TableId(type = IdType.AUTO)
     private Long id;
 
-    private String username;
-
-    private String password;
+    private String guestId;
 
     private String nickname;
 
     private String avatar;
 
     private Integer vipStatus;
+
+    private String deviceId;
+
+    private String deviceName;
+
+    private String osType;
+
+    private String appVersion;
+
+    private String region;
+
+    private String ip;
+
+    private LocalDateTime lastLoginTime;
 
     private LocalDateTime createTime;
 

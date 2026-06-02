@@ -23,6 +23,16 @@ mybatis-plus:
     db-config:
       id-type: auto
 
+sa-token:
+  token-name: Authorization
+  timeout: 2592000
+  active-timeout: -1
+  is-concurrent: true
+  is-share: true
+  token-style: random-128
+  is-log: true
+  jwt-secret-key: novel-user-secret-key-change-me
+
 shenyu:
   client:
     register-type: http

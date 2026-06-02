@@ -13,11 +13,17 @@ public class UserInfoVo implements Serializable {
 
     private Long userId;
 
-    private String username;
+    private String guestId;
 
     private String nickname;
 
     private String avatar;
 
     private Boolean vip;
+
+    private String deviceId;
+
+    private String region;
+
+    private String ip;
 }
