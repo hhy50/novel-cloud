@@ -6,7 +6,7 @@
 
     <parent>
         <groupId>com.novel</groupId>
-        <artifactId>novel-user</artifactId>
+        <artifactId>novel-cloud</artifactId>
         <version>1.0.0-SNAPSHOT</version>
         <relativePath>../pom.xml</relativePath>
     </parent>
@@ -18,6 +18,6 @@
     <modules>
         <module>novel-user-dto</module>
         <module>novel-user-api</module>
-        <module>novel-user-server</module>
+        <module>novel-user-service</module>
     </modules>
 </project>

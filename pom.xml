@@ -15,7 +15,7 @@
         <module>novel-common</module>
         <module>novel-user</module>
         <module>novel-book</module>
-        <module>novel-gateway</module>
+<!--        <module>novel-gateway</module>-->
     </modules>
 
     <properties>
@@ -61,7 +61,7 @@
                 <version>${mybatis-plus.version}</version>
             </dependency>
             <dependency>
-                <groupId>mysql</groupId>
+                <groupId>com.mysql</groupId>
                 <artifactId>mysql-connector-j</artifactId>
                 <version>${mysql.version}</version>
             </dependency>

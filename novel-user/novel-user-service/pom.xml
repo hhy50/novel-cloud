@@ -6,13 +6,13 @@
 
     <parent>
         <groupId>com.novel</groupId>
-        <artifactId>novel-cloud</artifactId>
+        <artifactId>novel-user</artifactId>
         <version>1.0.0-SNAPSHOT</version>
         <relativePath>../pom.xml</relativePath>
     </parent>
 
-    <artifactId>novel-gateway</artifactId>
-    <name>novel-gateway</name>
+    <artifactId>novel-user-service</artifactId>
+    <name>novel-user-service</name>
 
     <dependencies>
         <dependency>
@@ -20,28 +20,38 @@
             <artifactId>spring-boot-starter-webflux</artifactId>
         </dependency>
         <dependency>
+            <groupId>org.springframework.cloud</groupId>
+            <artifactId>spring-cloud-starter-openfeign</artifactId>
+        </dependency>
+        <dependency>
             <groupId>com.alibaba.cloud</groupId>
             <artifactId>spring-cloud-starter-alibaba-nacos-discovery</artifactId>
         </dependency>
         <dependency>
-            <groupId>org.apache.shenyu</groupId>
-            <artifactId>shenyu-spring-boot-starter-gateway</artifactId>
-            <version>${shenyu.version}</version>
+            <groupId>com.baomidou</groupId>
+            <artifactId>mybatis-plus-spring-boot3-starter</artifactId>
         </dependency>
         <dependency>
-            <groupId>org.apache.shenyu</groupId>
-            <artifactId>shenyu-spring-boot-starter-plugin-httpclient</artifactId>
-            <version>${shenyu.version}</version>
+            <groupId>com.mysql</groupId>
+            <artifactId>mysql-connector-j</artifactId>
         </dependency>
         <dependency>
-            <groupId>org.apache.shenyu</groupId>
-            <artifactId>shenyu-spring-boot-starter-plugin-divide</artifactId>
-            <version>${shenyu.version}</version>
+            <groupId>cn.dev33</groupId>
+            <artifactId>sa-token-spring-boot3-starter</artifactId>
+            <version>1.38.0</version>
         </dependency>
         <dependency>
-            <groupId>org.apache.shenyu</groupId>
-            <artifactId>shenyu-spring-boot-starter-plugin-discovery</artifactId>
-            <version>${shenyu.version}</version>
+            <groupId>cn.dev33</groupId>
+            <artifactId>sa-token-jwt</artifactId>
+            <version>1.38.0</version>
+        </dependency>
+        <dependency>
+            <groupId>com.novel</groupId>
+            <artifactId>novel-common-core</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.novel</groupId>
+            <artifactId>novel-user-dto</artifactId>
         </dependency>
         <dependency>
             <groupId>org.projectlombok</groupId>
