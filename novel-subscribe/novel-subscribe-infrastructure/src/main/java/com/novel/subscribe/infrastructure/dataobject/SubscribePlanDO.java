@@ -8,7 +8,7 @@ import lombok.Data;
 import java.time.LocalDateTime;
 
 @Data
-@TableName("subscribe_plan")
+@TableName("t_subscribe_plan")
 public class SubscribePlanDO {
 
     @TableId(type = IdType.AUTO)
