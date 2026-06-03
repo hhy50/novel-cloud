@@ -6,10 +6,10 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.cloud.client.discovery.EnableDiscoveryClient;
 import org.springframework.cloud.openfeign.EnableFeignClients;
 
-@MapperScan("com.novel.user.mapper")
+@MapperScan("com.novel.user.infrastructure.mapper")
 @EnableFeignClients(basePackages = "com.novel")
 @EnableDiscoveryClient
-@SpringBootApplication
+@SpringBootApplication(scanBasePackages = {"com.novel.user", "com.novel.common.config"})
 public class NovelUserApplication {
 
     public static void main(String[] args) {

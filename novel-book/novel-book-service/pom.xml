@@ -13,6 +13,7 @@
 
     <artifactId>novel-book-service</artifactId>
     <name>novel-book-service</name>
+    <description>书籍服务启动模块</description>
 
     <dependencies>
         <dependency>
@@ -38,6 +39,22 @@
         <dependency>
             <groupId>com.novel</groupId>
             <artifactId>novel-common-core</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.novel</groupId>
+            <artifactId>novel-book-adapter</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.novel</groupId>
+            <artifactId>novel-book-app</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.novel</groupId>
+            <artifactId>novel-book-domain</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.novel</groupId>
+            <artifactId>novel-book-infrastructure</artifactId>
         </dependency>
         <dependency>
             <groupId>com.novel</groupId>

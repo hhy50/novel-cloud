@@ -18,6 +18,10 @@
     <modules>
         <module>novel-book-dto</module>
         <module>novel-book-api</module>
+        <module>novel-book-adapter</module>
+        <module>novel-book-app</module>
+        <module>novel-book-domain</module>
+        <module>novel-book-infrastructure</module>
         <module>novel-book-service</module>
     </modules>
 </project>

@@ -17,5 +17,6 @@
 
     <modules>
         <module>novel-common-core</module>
+        <module>novel-common-config</module>
     </modules>
 </project>

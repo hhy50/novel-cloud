@@ -25,3 +25,15 @@ spring:
             - Path=/api/book/**
           filters:
             - StripPrefix=0
+        - id: novel-subscribe-service
+          uri: lb://novel-subscribe-service
+          predicates:
+            - Path=/api/subscribe/**
+          filters:
+            - StripPrefix=0
+        - id: novel-payment-service
+          uri: lb://novel-payment-service
+          predicates:
+            - Path=/api/payment/**
+          filters:
+            - StripPrefix=0

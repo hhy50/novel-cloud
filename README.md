@@ -29,6 +29,14 @@ novel-cloud/
 │   ├── novel-book-dto/
 │   ├── novel-book-api/
 │   └── novel-book-service/
+├── novel-subscribe/
+│   ├── novel-subscribe-dto/
+│   ├── novel-subscribe-api/
+│   └── novel-subscribe-service/
+├── novel-payment/
+│   ├── novel-payment-dto/
+│   ├── novel-payment-api/
+│   └── novel-payment-service/
 ├── novel-gateway/
 ├── sql/
 └── pom.xml
@@ -71,7 +79,7 @@ novel-cloud/
 - Service 接口 [`UserService`](novel-cloud/novel-user/novel-user-service/src/main/java/com/novel/user/service/UserService.java:7)
 - Service 实现 [`UserServiceImpl`](novel-cloud/novel-user/novel-user-service/src/main/java/com/novel/user/service/impl/UserServiceImpl.java:17)
 - Mapper [`UserInfoMapper`](novel-cloud/novel-user/novel-user-service/src/main/java/com/novel/user/mapper/UserInfoMapper.java:6)
-- Entity [`UserInfoEntity`](novel-cloud/novel-user/novel-user-service/src/main/java/com/novel/user/model/entity/UserInfoEntity.java:10)
+- Entity [`UserInfoEntity`](novel-cloud/novel-user/novel-user-service/src/main/java/com/novel/user/entity/UserInfoEntity.java:10)
 - MyBatis-Plus 自动填充 [`MybatisPlusMetaObjectHandler`](novel-cloud/novel-user/novel-user-service/src/main/java/com/novel/user/config/MybatisPlusMetaObjectHandler.java:9)
 
 #### 游客登录接口说明
@@ -143,10 +151,96 @@ novel-cloud/
 - Service 接口 [`BookService`](novel-cloud/novel-book/novel-book-service/src/main/java/com/novel/book/service/BookService.java:6)
 - Service 实现 [`BookServiceImpl`](novel-cloud/novel-book/novel-book-service/src/main/java/com/novel/book/service/impl/BookServiceImpl.java:8)
 - Mapper [`BookInfoMapper`](novel-cloud/novel-book/novel-book-service/src/main/java/com/novel/book/mapper/BookInfoMapper.java:6)
-- Entity [`BookInfoEntity`](novel-cloud/novel-book/novel-book-service/src/main/java/com/novel/book/model/entity/BookInfoEntity.java:10)
+- Entity [`BookInfoEntity`](novel-cloud/novel-book/novel-book-service/src/main/java/com/novel/book/entity/BookInfoEntity.java:10)
 - MyBatis-Plus 自动填充 [`MybatisPlusMetaObjectHandler`](novel-cloud/novel-book/novel-book-service/src/main/java/com/novel/book/config/MybatisPlusMetaObjectHandler.java:9)
 
-### 5. 网关服务
+### 5. 订阅服务
+
+#### DTO 模块
+
+- [`novel-subscribe-dto`](novel-cloud/novel-subscribe/novel-subscribe-dto/pom.xml)
+- 订阅计划 VO [`SubscribePlanVo`](novel-cloud/novel-subscribe/novel-subscribe-dto/src/main/java/com/novel/subscribe/dto/SubscribePlanVo.java)
+- 创建订阅 DTO [`SubscribeCreateDto`](novel-cloud/novel-subscribe/novel-subscribe-dto/src/main/java/com/novel/subscribe/dto/SubscribeCreateDto.java)
+- 用户订阅记录 VO [`UserSubscribeVo`](novel-cloud/novel-subscribe/novel-subscribe-dto/src/main/java/com/novel/subscribe/dto/UserSubscribeVo.java)
+- 订阅激活 DTO [`SubscribeActivateDto`](novel-cloud/novel-subscribe/novel-subscribe-dto/src/main/java/com/novel/subscribe/dto/SubscribeActivateDto.java)
+
+#### API 模块
+
+- OpenFeign 接口 [`SubscribeOpenFeignApi`](novel-cloud/novel-subscribe/novel-subscribe-api/src/main/java/com/novel/subscribe/api/SubscribeOpenFeignApi.java)
+- 供支付模块回调激活订阅
+
+#### Server 模块
+
+- 启动类 [`NovelSubscribeApplication`](novel-cloud/novel-subscribe/novel-subscribe-service/src/main/java/com/novel/subscribe/NovelSubscribeApplication.java)
+- Controller [`SubscribeController`](novel-cloud/novel-subscribe/novel-subscribe-service/src/main/java/com/novel/subscribe/controller/SubscribeController.java)
+- Open API Controller [`SubscribeOpenController`](novel-cloud/novel-subscribe/novel-subscribe-service/src/main/java/com/novel/subscribe/controller/open/SubscribeOpenController.java)
+- Service 接口 [`SubscribeService`](novel-cloud/novel-subscribe/novel-subscribe-service/src/main/java/com/novel/subscribe/service/SubscribeService.java)
+- Service 实现 [`SubscribeServiceImpl`](novel-cloud/novel-subscribe/novel-subscribe-service/src/main/java/com/novel/subscribe/service/impl/SubscribeServiceImpl.java)
+- Mapper [`SubscribePlanMapper`](novel-cloud/novel-subscribe/novel-subscribe-service/src/main/java/com/novel/subscribe/mapper/SubscribePlanMapper.java) / [`UserSubscribeMapper`](novel-cloud/novel-subscribe/novel-subscribe-service/src/main/java/com/novel/subscribe/mapper/UserSubscribeMapper.java)
+- Entity [`SubscribePlanEntity`](novel-cloud/novel-subscribe/novel-subscribe-service/src/main/java/com/novel/subscribe/entity/SubscribePlanEntity.java) / [`UserSubscribeEntity`](novel-cloud/novel-subscribe/novel-subscribe-service/src/main/java/com/novel/subscribe/entity/UserSubscribeEntity.java)
+
+#### 订阅业务逻辑说明
+
+订阅模块**只负责业务层面**：
+- 管理订阅计划（VIP套餐的名称、时长、价格）
+- 管理用户订阅记录（生效时间、到期时间、自动续订）
+- **续订周期计算**：用户已有未过期订阅时，新订阅从到期时间续订，而非当前时间
+- **VIP到账时间**：由 `activateSubscribe` 方法根据计划时长与当前订阅状态计算
+- 创建订阅时调用支付模块 [`PaymentOpenFeignApi.createPayment()`](novel-cloud/novel-payment/novel-payment-api/src/main/java/com/novel/payment/api/PaymentOpenFeignApi.java) 创建支付订单
+
+#### 接口列表
+
+| 接口 | 方法 | 说明 |
+|------|------|------|
+| `/api/subscribe/plans` | GET | 查询上架的订阅计划列表 |
+| `/api/subscribe/create` | POST | 创建订阅（发起订阅并创建支付订单） |
+| `/api/subscribe/active` | GET | 查询用户当前订阅状态 |
+| `/api/subscribe/history` | GET | 查询用户订阅历史 |
+| `/api/open/subscribe/activate` | POST | 支付成功后激活订阅（服务间调用） |
+
+### 6. 支付服务
+
+#### DTO 模块
+
+- [`novel-payment-dto`](novel-cloud/novel-payment/novel-payment-dto/pom.xml)
+- 创建支付订单 DTO [`PaymentCreateDto`](novel-cloud/novel-payment/novel-payment-dto/src/main/java/com/novel/payment/dto/PaymentCreateDto.java)
+- 支付订单结果 VO [`PaymentResultVo`](novel-cloud/novel-payment/novel-payment-dto/src/main/java/com/novel/payment/dto/PaymentResultVo.java)
+- 支付回调 DTO [`PaymentNotifyDto`](novel-cloud/novel-payment/novel-payment-dto/src/main/java/com/novel/payment/dto/PaymentNotifyDto.java)
+
+#### API 模块
+
+- OpenFeign 接口 [`PaymentOpenFeignApi`](novel-cloud/novel-payment/novel-payment-api/src/main/java/com/novel/payment/api/PaymentOpenFeignApi.java)
+- 供订阅模块调用创建支付订单
+
+#### Server 模块
+
+- 启动类 [`NovelPaymentApplication`](novel-cloud/novel-payment/novel-payment-service/src/main/java/com/novel/payment/NovelPaymentApplication.java)
+- Controller [`PaymentController`](novel-cloud/novel-payment/novel-payment-service/src/main/java/com/novel/payment/controller/PaymentController.java)
+- Open API Controller [`PaymentOpenController`](novel-cloud/novel-payment/novel-payment-service/src/main/java/com/novel/payment/controller/open/PaymentOpenController.java)
+- Service 接口 [`PaymentService`](novel-cloud/novel-payment/novel-payment-service/src/main/java/com/novel/payment/service/PaymentService.java)
+- Service 实现 [`PaymentServiceImpl`](novel-cloud/novel-payment/novel-payment-service/src/main/java/com/novel/payment/service/impl/PaymentServiceImpl.java)
+- Mapper [`PaymentOrderMapper`](novel-cloud/novel-payment/novel-payment-service/src/main/java/com/novel/payment/mapper/PaymentOrderMapper.java)
+- Entity [`PaymentOrderEntity`](novel-cloud/novel-payment/novel-payment-service/src/main/java/com/novel/payment/entity/PaymentOrderEntity.java)
+
+#### 支付模块职责说明
+
+支付模块**只负责支付订单层面**：
+- 创建支付订单、生成订单号
+- 处理第三方支付平台回调、更新支付状态
+- 记录交易流水号与回调原始数据
+- 支付成功后回调订阅模块 [`SubscribeOpenFeignApi.activateSubscribe()`](novel-cloud/novel-subscribe/novel-subscribe-api/src/main/java/com/novel/subscribe/api/SubscribeOpenFeignApi.java) 激活订阅
+- **不涉及任何订阅业务逻辑**（不知道VIP时长、续订规则等）
+
+#### 接口列表
+
+| 接口 | 方法 | 说明 |
+|------|------|------|
+| `/api/payment/query` | GET | 查询支付订单 |
+| `/api/payment/list` | GET | 查询用户支付订单列表 |
+| `/api/open/payment/create` | POST | 创建支付订单（服务间调用） |
+| `/api/open/payment/notify` | POST | 支付回调（第三方平台回调） |
+
+### 7. 网关服务
 
 - 网关模块 POM: [`novel-gateway/pom.xml`](novel-cloud/novel-gateway/pom.xml)
 - 启动类 [`NovelGatewayApplication`](novel-cloud/novel-gateway/src/main/java/com/novel/gateway/NovelGatewayApplication.java:8)
@@ -186,15 +280,19 @@ DTO/VO 不放公共模块，而是：
 已在以下服务中配置服务发现：
 - [`novel-user-service/application.yml`](novel-cloud/novel-user/novel-user-service/src/main/resources/application.yml)
 - [`novel-book-service/application.yml`](novel-cloud/novel-book/novel-book-service/src/main/resources/application.yml)
+- [`novel-subscribe-service/application.yml`](novel-cloud/novel-subscribe/novel-subscribe-service/src/main/resources/application.yml)
+- [`novel-payment-service/application.yml`](novel-cloud/novel-payment/novel-payment-service/src/main/resources/application.yml)
 - [`novel-gateway/application.yml`](novel-cloud/novel-gateway/src/main/resources/application.yml)
 
 默认地址：`127.0.0.1:8848`
 
 ### MySQL
 
-已配置两个数据库：
+已配置四个数据库：
 - `novel_user`
 - `novel_book`
+- `novel_subscribe`
+- `novel_payment`
 
 初始化脚本见 [`sql/init.sql`](novel-cloud/sql/init.sql)
 
@@ -237,8 +335,34 @@ DTO/VO 不放公共模块，而是：
 2. 初始化 MySQL，执行 [`sql/init.sql`](novel-cloud/sql/init.sql)
 3. 启动 [`novel-user-service`](novel-cloud/novel-user/novel-user-service/pom.xml)
 4. 启动 [`novel-book-service`](novel-cloud/novel-book/novel-book-service/pom.xml)
-5. 启动 [`novel-gateway`](novel-cloud/novel-gateway/pom.xml)
+5. 启动 [`novel-subscribe-service`](novel-cloud/novel-subscribe/novel-subscribe-service/pom.xml)
+6. 启动 [`novel-payment-service`](novel-cloud/novel-payment/novel-payment-service/pom.xml)
+7. 启动 [`novel-gateway`](novel-cloud/novel-gateway/pom.xml)
 
 ## 注意事项
 
 你要求里写了 “Spring Boot 4”，但当前 Java 生态下稳定可用、与 Spring Cloud / Spring Cloud Alibaba / MyBatis-Plus 更容易配套落地的是 **Spring Boot 3.x**。因此当前骨架采用的是 **Spring Boot 3.2.x**。如果你坚持尝试 Spring Boot 4，后续需要重新验证整套依赖兼容性。
+
+## 订阅与支付模块调用关系
+
+```text
+┌──────────────┐     创建订阅 + 创建支付订单     ┌──────────────┐
+│              │ ──────────────────────────────► │              │
+│   订阅模块    │                                 │   支付模块    │
+│  (subscribe) │ ◄────────────────────────────── │  (payment)   │
+│              │     支付成功回调激活订阅           │              │
+└──────────────┘                                 └──────────────┘
+       │                                                │
+       │ 管理业务逻辑                                     │ 只管订单层面
+       │ · 续订周期计算                                    │ · 创建订单
+       │ · VIP到账时间                                    │ · 支付回调
+       │ · 订阅计划                                       │ · 订单查询
+       │ · 订阅记录                                       │ · 交易流水
+```
+
+**调用流程**：
+1. App 调用 `POST /api/subscribe/create` 发起订阅
+2. 订阅模块创建待支付订阅记录，通过 Feign 调用 `POST /api/open/payment/create` 创建支付订单
+3. App 完成支付后，第三方支付平台回调 `POST /api/open/payment/notify`
+4. 支付模块更新订单状态，支付成功时通过 Feign 调用 `POST /api/open/subscribe/activate` 激活订阅
+5. 订阅模块计算 VIP 生效时间和到期时间

@@ -18,6 +18,10 @@
     <modules>
         <module>novel-user-dto</module>
         <module>novel-user-api</module>
+        <module>novel-user-adapter</module>
+        <module>novel-user-app</module>
+        <module>novel-user-domain</module>
+        <module>novel-user-infrastructure</module>
         <module>novel-user-service</module>
     </modules>
 </project>

@@ -1,0 +1,25 @@
+server:
+  port: 8083
+
+spring:
+  application:
+    name: novel-subscribe-service
+  config:
+    import:
+      - optional:nacos:novel-subscribe-service.yml?refresh=true
+      - optional:nacos:application-common.yml?group=DEFAULT_GROUP&refresh=true
+  profiles:
+    active: dev
+
+mybatis-plus:
+  configuration:
+    map-underscore-to-camel-case: true
+  global-config:
+    db-config:
+      id-type: auto
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: '*'
