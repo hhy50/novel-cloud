@@ -4,7 +4,7 @@
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
-    <groupId>com.novel</groupId>
+    <groupId>com.novel.cloud</groupId>
     <artifactId>novel-cloud</artifactId>
     <version>1.0.0-SNAPSHOT</version>
     <packaging>pom</packaging>
@@ -12,7 +12,7 @@
     <description>Novel Cloud Microservices</description>
 
     <modules>
-        <module>novel-common</module>
+        <module>commons</module>
         <module>novel-user</module>
         <module>novel-book</module>
         <module>novel-subscribe</module>
@@ -88,137 +88,137 @@
                 <version>${jackson.version}</version>
             </dependency>
             <dependency>
-                <groupId>org.apache.shenyu</groupId>
-                <artifactId>shenyu-spring-boot-starter-client-spring-cloud</artifactId>
-                <version>${shenyu.version}</version>
+                <groupId>cn.dev33</groupId>
+                <artifactId>sa-token-reactor-spring-boot-starter</artifactId>
+                <version>1.37.0</version>
             </dependency>
             <dependency>
-                <groupId>com.novel</groupId>
-                <artifactId>novel-common-core</artifactId>
+                <groupId>com.novel.cloud</groupId>
+                <artifactId>novel-cloud-common</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>
-                <groupId>com.novel</groupId>
-                <artifactId>novel-common-config</artifactId>
+                <groupId>com.novel.cloud</groupId>
+                <artifactId>novel-cloud-config</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>
-                <groupId>com.novel</groupId>
+                <groupId>com.novel.cloud</groupId>
                 <artifactId>novel-user-dto</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>
-                <groupId>com.novel</groupId>
+                <groupId>com.novel.cloud</groupId>
                 <artifactId>novel-book-dto</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>
-                <groupId>com.novel</groupId>
+                <groupId>com.novel.cloud</groupId>
                 <artifactId>novel-user-api</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>
-                <groupId>com.novel</groupId>
+                <groupId>com.novel.cloud</groupId>
                 <artifactId>novel-book-api</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>
-                <groupId>com.novel</groupId>
+                <groupId>com.novel.cloud</groupId>
                 <artifactId>novel-book-adapter</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>
-                <groupId>com.novel</groupId>
+                <groupId>com.novel.cloud</groupId>
                 <artifactId>novel-book-app</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>
-                <groupId>com.novel</groupId>
+                <groupId>com.novel.cloud</groupId>
                 <artifactId>novel-book-domain</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>
-                <groupId>com.novel</groupId>
+                <groupId>com.novel.cloud</groupId>
                 <artifactId>novel-book-infrastructure</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>
-                <groupId>com.novel</groupId>
+                <groupId>com.novel.cloud</groupId>
                 <artifactId>novel-subscribe-dto</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>
-                <groupId>com.novel</groupId>
+                <groupId>com.novel.cloud</groupId>
                 <artifactId>novel-subscribe-api</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>
-                <groupId>com.novel</groupId>
+                <groupId>com.novel.cloud</groupId>
                 <artifactId>novel-subscribe-adapter</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>
-                <groupId>com.novel</groupId>
+                <groupId>com.novel.cloud</groupId>
                 <artifactId>novel-subscribe-app</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>
-                <groupId>com.novel</groupId>
+                <groupId>com.novel.cloud</groupId>
                 <artifactId>novel-subscribe-domain</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>
-                <groupId>com.novel</groupId>
+                <groupId>com.novel.cloud</groupId>
                 <artifactId>novel-subscribe-infrastructure</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>
-                <groupId>com.novel</groupId>
+                <groupId>com.novel.cloud</groupId>
                 <artifactId>novel-payment-dto</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>
-                <groupId>com.novel</groupId>
+                <groupId>com.novel.cloud</groupId>
                 <artifactId>novel-payment-api</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>
-                <groupId>com.novel</groupId>
+                <groupId>com.novel.cloud</groupId>
                 <artifactId>novel-user-adapter</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>
-                <groupId>com.novel</groupId>
+                <groupId>com.novel.cloud</groupId>
                 <artifactId>novel-user-app</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>
-                <groupId>com.novel</groupId>
+                <groupId>com.novel.cloud</groupId>
                 <artifactId>novel-user-domain</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>
-                <groupId>com.novel</groupId>
+                <groupId>com.novel.cloud</groupId>
                 <artifactId>novel-user-infrastructure</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>
-                <groupId>com.novel</groupId>
+                <groupId>com.novel.cloud</groupId>
                 <artifactId>novel-payment-adapter</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>
-                <groupId>com.novel</groupId>
+                <groupId>com.novel.cloud</groupId>
                 <artifactId>novel-payment-app</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>
-                <groupId>com.novel</groupId>
+                <groupId>com.novel.cloud</groupId>
                 <artifactId>novel-payment-domain</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>
-                <groupId>com.novel</groupId>
+                <groupId>com.novel.cloud</groupId>
                 <artifactId>novel-payment-infrastructure</artifactId>
                 <version>${project.version}</version>
             </dependency>

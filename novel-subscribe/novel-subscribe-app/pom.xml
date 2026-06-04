@@ -5,7 +5,7 @@
     <modelVersion>4.0.0</modelVersion>
 
     <parent>
-        <groupId>com.novel</groupId>
+        <groupId>com.novel.cloud</groupId>
         <artifactId>novel-subscribe</artifactId>
         <version>1.0.0-SNAPSHOT</version>
         <relativePath>../pom.xml</relativePath>
@@ -18,40 +18,37 @@
     <dependencies>
         <dependency>
             <groupId>org.springframework</groupId>
-            <artifactId>spring-context</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>org.springframework</groupId>
             <artifactId>spring-tx</artifactId>
         </dependency>
+
         <dependency>
             <groupId>io.projectreactor</groupId>
             <artifactId>reactor-core</artifactId>
         </dependency>
+
         <dependency>
-            <groupId>com.novel</groupId>
-            <artifactId>novel-common-core</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>com.novel</groupId>
+            <groupId>com.novel.cloud</groupId>
             <artifactId>novel-subscribe-domain</artifactId>
         </dependency>
+
         <dependency>
-            <groupId>com.novel</groupId>
+            <groupId>com.novel.cloud</groupId>
             <artifactId>novel-subscribe-dto</artifactId>
         </dependency>
+
         <dependency>
-            <groupId>com.novel</groupId>
+            <groupId>com.novel.cloud</groupId>
+            <artifactId>novel-cloud-common</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>cn.dev33</groupId>
+            <artifactId>sa-token-reactor-spring-boot-starter</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>com.novel.cloud</groupId>
             <artifactId>novel-payment-api</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>com.novel</groupId>
-            <artifactId>novel-payment-dto</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>org.projectlombok</groupId>
-            <artifactId>lombok</artifactId>
-            <optional>true</optional>
         </dependency>
     </dependencies>
 </project>
