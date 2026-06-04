@@ -15,7 +15,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.BeanUtils;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Mono;
-import reactor.core.scheduler.Schedulers;
 
 import java.util.List;
 import java.util.stream.Collectors;
@@ -39,13 +38,11 @@ public class PaymentAppService {
                     paymentOrderRepository.save(order);
                     return order;
                 })
-                .subscribeOn(Schedulers.boundedElastic())
                 .map(this::toResultVo);
     }
 
     public Mono<PaymentResultVo> handlePaymentNotify(PaymentNotifyDto dto) {
         return Mono.fromCallable(() -> paymentOrderRepository.findByOrderNo(dto.getOrderNo()))
-                .subscribeOn(Schedulers.boundedElastic())
                 .switchIfEmpty(Mono.error(new BusinessException("支付订单不存在")))
                 .flatMap(order -> {
                     if (!order.isPending()) {
@@ -60,7 +57,6 @@ public class PaymentAppService {
                                 paymentOrderRepository.updateById(order);
                                 return order;
                             })
-                            .subscribeOn(Schedulers.boundedElastic())
                             .flatMap(saved -> {
                                 // 支付成功时，回调订阅模块激活订阅
                                 if (dto.getPayStatus() == PaymentOrder.STATUS_PAID) {
@@ -76,7 +72,6 @@ public class PaymentAppService {
                                                 }
                                                 return saved;
                                             })
-                                            .subscribeOn(Schedulers.boundedElastic())
                                             .onErrorResume(e -> {
                                                 log.error("回调订阅模块异常", e);
                                                 return Mono.just(saved);
@@ -90,13 +85,11 @@ public class PaymentAppService {
 
     public Mono<PaymentResultVo> getPaymentByOrderNo(String orderNo) {
         return Mono.fromCallable(() -> paymentOrderRepository.findByOrderNo(orderNo))
-                .subscribeOn(Schedulers.boundedElastic())
                 .map(this::toResultVo);
     }
 
     public Mono<List<PaymentResultVo>> listPaymentsByUserId(Long userId) {
         return Mono.fromCallable(() -> paymentOrderRepository.findByUserId(userId))
-                .subscribeOn(Schedulers.boundedElastic())
                 .map(orders -> orders.stream()
                         .map(this::toResultVo)
                         .collect(Collectors.toList())
