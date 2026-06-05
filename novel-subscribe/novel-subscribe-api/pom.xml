@@ -5,7 +5,7 @@
     <modelVersion>4.0.0</modelVersion>
 
     <parent>
-        <groupId>com.novel</groupId>
+        <groupId>com.novel.cloud</groupId>
         <artifactId>novel-subscribe</artifactId>
         <version>1.0.0-SNAPSHOT</version>
     </parent>
@@ -19,22 +19,15 @@
             <groupId>org.springframework.cloud</groupId>
             <artifactId>spring-cloud-openfeign-core</artifactId>
         </dependency>
+
         <dependency>
-            <groupId>org.springframework</groupId>
-            <artifactId>spring-web</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>com.novel</groupId>
-            <artifactId>novel-common-core</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>com.novel</groupId>
+            <groupId>com.novel.cloud</groupId>
             <artifactId>novel-subscribe-dto</artifactId>
         </dependency>
+
         <dependency>
-            <groupId>org.projectlombok</groupId>
-            <artifactId>lombok</artifactId>
-            <optional>true</optional>
+            <groupId>com.novel.cloud</groupId>
+            <artifactId>novel-cloud-common</artifactId>
         </dependency>
     </dependencies>
 </project>
