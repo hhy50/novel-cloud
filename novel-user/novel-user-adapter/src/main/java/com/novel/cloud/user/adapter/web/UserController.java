@@ -9,7 +9,6 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
-import reactor.core.publisher.Mono;
 
 @Validated
 @RestController
@@ -22,47 +21,47 @@ public class UserController {
     private final FeedbackAppService feedbackAppService;
 
     @PostMapping("/login")
-    public Mono<R<UserLoginVo>> login(@Valid @RequestBody UserLoginDto params) {
-        return userAppService.login(params).map(R::ok);
+    public R<UserLoginVo> login(@Valid @RequestBody UserLoginDto params) {
+        return R.ok(userAppService.login(params));
     }
 
     @GetMapping("/profile")
-    public Mono<R<UserProfileVo>> getProfile() {
-        return walletAppService.getUserProfile().map(R::ok);
+    public R<UserProfileVo> getProfile() {
+        return R.ok(walletAppService.getUserProfile());
     }
 
     @GetMapping("/wallet")
-    public Mono<R<WalletInfoVo>> getWallet() {
-        return walletAppService.getWalletInfo().map(R::ok);
+    public R<WalletInfoVo> getWallet() {
+        return R.ok(walletAppService.getWalletInfo());
     }
 
     @PostMapping("/coins/records")
-    public Mono<R<CoinRecordsVo>> getCoinRecords(@Valid @RequestBody CoinRecordsQueryDto params) {
-        return walletAppService.getCoinRecords(params).map(R::ok);
+    public R<CoinRecordsVo> getCoinRecords(@Valid @RequestBody CoinRecordsQueryDto params) {
+        return R.ok(walletAppService.getCoinRecords(params));
     }
 
     @GetMapping("/checkin/status")
-    public Mono<R<CheckinStatusVo>> getCheckinStatus() {
-        return walletAppService.getCheckinStatus().map(R::ok);
+    public R<CheckinStatusVo> getCheckinStatus() {
+        return R.ok(walletAppService.getCheckinStatus());
     }
 
     @PostMapping("/checkin")
-    public Mono<R<CheckinVo>> checkin() {
-        return walletAppService.performCheckin().map(R::ok);
+    public R<CheckinVo> checkin() {
+        return R.ok(walletAppService.performCheckin());
     }
 
     @GetMapping("/tasks/daily")
-    public Mono<R<DailyTasksVo>> getDailyTasks() {
-        return walletAppService.getDailyTasks().map(R::ok);
+    public R<DailyTasksVo> getDailyTasks() {
+        return R.ok(walletAppService.getDailyTasks());
     }
 
     @PostMapping("/tasks/claim")
-    public Mono<R<ClaimTaskRewardVo>> claimTaskReward(@Valid @RequestBody ClaimTaskRewardDto params) {
-        return walletAppService.claimTaskReward(params).map(R::ok);
+    public R<ClaimTaskRewardVo> claimTaskReward(@Valid @RequestBody ClaimTaskRewardDto params) {
+        return R.ok(walletAppService.claimTaskReward(params));
     }
 
     @PostMapping("/feedback")
-    public Mono<R<SubmitFeedbackVo>> submitFeedback(@Valid @RequestBody SubmitFeedbackDto params) {
-        return feedbackAppService.submitFeedback(params).map(R::ok);
+    public R<SubmitFeedbackVo> submitFeedback(@Valid @RequestBody SubmitFeedbackDto params) {
+        return R.ok(feedbackAppService.submitFeedback(params));
     }
 }

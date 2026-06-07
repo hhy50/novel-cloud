@@ -16,19 +16,10 @@ public class UserLoginVo implements Serializable {
 
     private Long userId;
 
-    private String guestId;
-
     private String nickname;
 
+    // 用户头像
     private String avatar;
-
-    private Boolean vip;
-
-    private String deviceId;
-
-    private String region;
-
-    private String ip;
 
     private String token;
 }

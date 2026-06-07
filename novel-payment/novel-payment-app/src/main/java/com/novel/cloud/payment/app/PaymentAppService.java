@@ -14,7 +14,6 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.BeanUtils;
 import org.springframework.stereotype.Service;
-import reactor.core.publisher.Mono;
 
 import java.util.List;
 import java.util.stream.Collectors;
@@ -31,69 +30,59 @@ public class PaymentAppService {
     private final PaymentDomainService paymentDomainService;
     private final SubscribeOpenFeignApi subscribeOpenFeignApi;
 
-    public Mono<PaymentResultVo> createPayment(PaymentCreateDto dto) {
-        return Mono.fromCallable(() -> {
-                    PaymentOrder order = paymentDomainService.createPendingOrder(
-                            dto.getUserId(), dto.getAmount(), dto.getPayChannel(), dto.getSubscribeId());
-                    paymentOrderRepository.save(order);
-                    return order;
-                })
-                .map(this::toResultVo);
+    public PaymentResultVo createPayment(PaymentCreateDto dto) {
+        PaymentOrder order = paymentDomainService.createPendingOrder(
+                dto.getUserId(), dto.getAmount(), dto.getPayChannel(), dto.getSubscribeId());
+        paymentOrderRepository.save(order);
+        return toResultVo(order);
     }
 
-    public Mono<PaymentResultVo> handlePaymentNotify(PaymentNotifyDto dto) {
-        return Mono.fromCallable(() -> paymentOrderRepository.findByOrderNo(dto.getOrderNo()))
-                .switchIfEmpty(Mono.error(new BusinessException("支付订单不存在")))
-                .flatMap(order -> {
-                    if (!order.isPending()) {
-                        log.warn("订单 {} 状态非待支付，忽略回调, 当前状态: {}", dto.getOrderNo(), order.getPayStatus());
-                        return Mono.just(order);
-                    }
+    public PaymentResultVo handlePaymentNotify(PaymentNotifyDto dto) {
+        PaymentOrder order = paymentOrderRepository.findByOrderNo(dto.getOrderNo());
+        if (order == null) {
+            throw new BusinessException("支付订单不存在");
+        }
 
-                    // 领域服务处理回调
-                    paymentDomainService.handleCallback(order, dto.getPayStatus(), dto.getTradeNo(), dto.getCallbackData());
+        if (!order.isPending()) {
+            log.warn("订单 {} 状态非待支付，忽略回调, 当前状态: {}", dto.getOrderNo(), order.getPayStatus());
+            return toResultVo(order);
+        }
 
-                    return Mono.fromCallable(() -> {
-                                paymentOrderRepository.updateById(order);
-                                return order;
-                            })
-                            .flatMap(saved -> {
-                                // 支付成功时，回调订阅模块激活订阅
-                                if (dto.getPayStatus() == PaymentOrder.STATUS_PAID) {
-                                    SubscribeActivateDto activateDto = new SubscribeActivateDto();
-                                    activateDto.setSubscribeId(saved.getSubscribeId());
-                                    activateDto.setOrderNo(saved.getOrderNo());
+        // 领域服务处理回调
+        paymentDomainService.handleCallback(order, dto.getPayStatus(), dto.getTradeNo(), dto.getCallbackData());
 
-                                    return Mono.fromCallable(() -> {
-                                                R<?> result = subscribeOpenFeignApi.activateSubscribe(activateDto);
-                                                if (result.getCode() != 0) {
-                                                    log.error("激活订阅失败, subscribeId: {}, orderNo: {}, msg: {}",
-                                                            saved.getSubscribeId(), saved.getOrderNo(), result.getMessage());
-                                                }
-                                                return saved;
-                                            })
-                                            .onErrorResume(e -> {
-                                                log.error("回调订阅模块异常", e);
-                                                return Mono.just(saved);
-                                            });
-                                }
-                                return Mono.just(saved);
-                            });
-                })
-                .map(this::toResultVo);
+        paymentOrderRepository.updateById(order);
+
+        // 支付成功时，回调订阅模块激活订阅
+        if (dto.getPayStatus() == PaymentOrder.STATUS_PAID) {
+            SubscribeActivateDto activateDto = new SubscribeActivateDto();
+            activateDto.setSubscribeId(order.getSubscribeId());
+            activateDto.setOrderNo(order.getOrderNo());
+
+            try {
+                R<?> result = subscribeOpenFeignApi.activateSubscribe(activateDto);
+                if (result.getCode() != 0) {
+                    log.error("激活订阅失败, subscribeId: {}, orderNo: {}, msg: {}",
+                            order.getSubscribeId(), order.getOrderNo(), result.getMessage());
+                }
+            } catch (Exception e) {
+                log.error("回调订阅模块异常", e);
+            }
+        }
+
+        return toResultVo(order);
     }
 
-    public Mono<PaymentResultVo> getPaymentByOrderNo(String orderNo) {
-        return Mono.fromCallable(() -> paymentOrderRepository.findByOrderNo(orderNo))
-                .map(this::toResultVo);
+    public PaymentResultVo getPaymentByOrderNo(String orderNo) {
+        PaymentOrder order = paymentOrderRepository.findByOrderNo(orderNo);
+        return toResultVo(order);
     }
 
-    public Mono<List<PaymentResultVo>> listPaymentsByUserId(Long userId) {
-        return Mono.fromCallable(() -> paymentOrderRepository.findByUserId(userId))
-                .map(orders -> orders.stream()
-                        .map(this::toResultVo)
-                        .collect(Collectors.toList())
-                );
+    public List<PaymentResultVo> listPaymentsByUserId(Long userId) {
+        List<PaymentOrder> orders = paymentOrderRepository.findByUserId(userId);
+        return orders.stream()
+                .map(this::toResultVo)
+                .collect(Collectors.toList());
     }
 
     private PaymentResultVo toResultVo(PaymentOrder order) {

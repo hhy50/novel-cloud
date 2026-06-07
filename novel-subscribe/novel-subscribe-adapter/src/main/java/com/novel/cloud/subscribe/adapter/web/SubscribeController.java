@@ -10,7 +10,6 @@ import jakarta.validation.constraints.NotNull;
 import lombok.RequiredArgsConstructor;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
-import reactor.core.publisher.Mono;
 
 import java.util.List;
 
@@ -27,22 +26,22 @@ public class SubscribeController {
     private final SubscribeAppService subscribeAppService;
 
     @GetMapping("/plans")
-    public Mono<R<List<SubscribePlan>>> listPlans() {
-        return subscribeAppService.listPlans().map(R::ok);
+    public R<List<SubscribePlan>> listPlans() {
+        return R.ok(subscribeAppService.listPlans());
     }
 
     @PostMapping("/create")
-    public Mono<R<UserSubscribeVo>> createSubscribe(@Valid @RequestBody SubscribeCreateDto dto) {
-        return subscribeAppService.createSubscribe(dto).map(R::ok);
+    public R<UserSubscribeVo> createSubscribe(@Valid @RequestBody SubscribeCreateDto dto) {
+        return R.ok(subscribeAppService.createSubscribe(dto));
     }
 
     @GetMapping("/active")
-    public Mono<R<UserSubscribeVo>> getActiveSubscribe(@NotNull @RequestParam Long userId) {
-        return subscribeAppService.getUserActiveSubscribe(userId).map(R::ok);
+    public R<UserSubscribeVo> getActiveSubscribe(@NotNull @RequestParam Long userId) {
+        return R.ok(subscribeAppService.getUserActiveSubscribe(userId));
     }
 
     @GetMapping("/history")
-    public Mono<R<List<UserSubscribeVo>>> getSubscribeHistory(@NotNull @RequestParam Long userId) {
-        return subscribeAppService.getUserSubscribeHistory(userId).collectList().map(R::ok);
+    public R<List<UserSubscribeVo>> getSubscribeHistory(@NotNull @RequestParam Long userId) {
+        return R.ok(subscribeAppService.getUserSubscribeHistory(userId));
     }
 }

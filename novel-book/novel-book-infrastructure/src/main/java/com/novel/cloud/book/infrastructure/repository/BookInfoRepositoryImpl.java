@@ -33,19 +33,18 @@ public class BookInfoRepositoryImpl implements BookInfoRepository {
     public PageResult<BookInfo> searchByKeyword(String keyword, Integer page, Integer pageSize) {
         String likeKeyword = "%" + keyword + "%";
         LambdaQueryWrapper<BookInfoDO> wrapper = new LambdaQueryWrapper<BookInfoDO>()
-                .like(BookInfoDO::getBookName, likeKeyword)
+                .like(BookInfoDO::getName, likeKeyword)
                 .or()
-                .like(BookInfoDO::getAuthorName, likeKeyword)
+                .like(BookInfoDO::getAuthor, likeKeyword)
                 .or()
                 .like(BookInfoDO::getDescription, likeKeyword)
-                .orderByDesc(BookInfoDO::getUpdateTime);
+                .orderByDesc(BookInfoDO::getUpdatedAt);
 
         Page<BookInfoDO> pageResult = bookInfoMapper.selectPage(
                 new Page<>(page, pageSize),
                 wrapper
         );
 
-        // IPage -> PageResult -> map 转换实体类型
         return new PageResult<>(pageResult.getRecords(), pageResult.getTotal(), pageResult.getCurrent(), pageResult.getSize())
                 .map(this::toEntity);
     }
@@ -53,7 +52,7 @@ public class BookInfoRepositoryImpl implements BookInfoRepository {
     @Override
     public List<BookInfo> findRecommendations(Integer limit) {
         LambdaQueryWrapper<BookInfoDO> wrapper = new LambdaQueryWrapper<BookInfoDO>()
-                .orderByDesc(BookInfoDO::getUpdateTime)
+                .orderByDesc(BookInfoDO::getUpdatedAt)
                 .last("limit " + limit);
 
         List<BookInfoDO> bookInfoDOList = bookInfoMapper.selectList(wrapper);

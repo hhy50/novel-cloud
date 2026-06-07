@@ -22,6 +22,7 @@ public class UserLoginDto implements Serializable {
     private String appVersion;
 
     private String country;
+    
     private String language;
 
     private String ip;

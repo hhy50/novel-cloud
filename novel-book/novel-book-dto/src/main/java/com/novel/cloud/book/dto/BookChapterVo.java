@@ -1,4 +1,4 @@
-package com.novel.book.dto;
+package com.novel.cloud.book.dto;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
 import lombok.Data;
@@ -35,6 +35,11 @@ public class BookChapterVo implements Serializable {
      * 是否免费
      */
     private Boolean isFree;
+
+    /**
+     * 是否VIP章节
+     */
+    private Boolean isVip;
 
     /**
      * 是否已购买

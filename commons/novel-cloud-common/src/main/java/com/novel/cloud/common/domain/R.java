@@ -1,5 +1,6 @@
 package com.novel.cloud.common.domain;
 
+import com.novel.cloud.consts.BizErrType;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -42,6 +43,13 @@ public class R<T> implements Serializable {
         return R.<T>builder()
                 .code(1)
                 .message(message)
+                .build();
+    }
+
+    public static <T> R<T> fail(BizErrType err) {
+        return R.<T>builder()
+                .code(err.getCode())
+                .message(err.getMessage())
                 .build();
     }
 

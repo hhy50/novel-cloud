@@ -10,7 +10,6 @@ import com.novel.cloud.common.domain.PageResult;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import reactor.core.publisher.Mono;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -28,120 +27,108 @@ public class SearchAppService {
     private final BookInfoRepository bookInfoRepository;
 
     @Transactional
-    public Mono<SearchBooksVo> searchBooks(SearchBooksDto params) {
-        return Mono.fromCallable(() -> {
-            Long userId = StpUtil.getLoginIdAsLong();
+    public SearchBooksVo searchBooks(SearchBooksDto params) {
+        Long userId = StpUtil.getLoginIdAsLong();
+        // Save search history
+        saveSearchHistory(userId, params.getKeyword());
 
-            // Save search history
-            saveSearchHistory(userId, params.getKeyword());
+        // Search books by keyword (single paginated query)
+        PageResult<BookInfo> pageResult = bookInfoRepository.searchByKeyword(
+                params.getKeyword(),
+                params.getPage(),
+                params.getPageSize()
+        );
 
-            // Search books by keyword (single paginated query)
-            PageResult<BookInfo> pageResult = bookInfoRepository.searchByKeyword(
-                    params.getKeyword(),
-                    params.getPage(),
-                    params.getPageSize()
-            );
+        List<SearchBookItemVo> itemVos = pageResult.getRecords().stream()
+                .map(this::toSearchBookItemVo)
+                .collect(Collectors.toList());
 
-            List<SearchBookItemVo> itemVos = pageResult.getRecords().stream()
-                    .map(this::toSearchBookItemVo)
-                    .collect(Collectors.toList());
-
-            SearchBooksVo result = new SearchBooksVo();
-            result.setBooks(itemVos);
-            result.setTotal((int) pageResult.getTotal());
-            result.setKeyword(params.getKeyword());
-            return result;
-        });
+        SearchBooksVo result = new SearchBooksVo();
+        result.setBooks(itemVos);
+        result.setTotal((int) pageResult.getTotal());
+        result.setKeyword(params.getKeyword());
+        return result;
     }
 
-    public Mono<SearchHistoryVo> getSearchHistory() {
-        return Mono.fromCallable(() -> {
-            Long userId = StpUtil.getLoginIdAsLong();
+    public SearchHistoryVo getSearchHistory() {
+        Long userId = StpUtil.getLoginIdAsLong();
+        List<SearchHistory> historyList = searchHistoryRepository.findByUserId(userId, 10);
 
-            List<SearchHistory> historyList = searchHistoryRepository.findByUserId(userId, 10);
+        List<String> keywords = historyList.stream()
+                .map(SearchHistory::getKeyword)
+                .collect(Collectors.toList());
 
-            List<String> keywords = historyList.stream()
-                    .map(SearchHistory::getKeyword)
-                    .collect(Collectors.toList());
-
-            SearchHistoryVo result = new SearchHistoryVo();
-            result.setKeywords(keywords);
-            return result;
-        });
+        SearchHistoryVo result = new SearchHistoryVo();
+        result.setKeywords(keywords);
+        return result;
     }
 
     @Transactional
-    public Mono<Boolean> clearSearchHistory() {
-        return Mono.fromCallable(() -> {
-            Long userId = StpUtil.getLoginIdAsLong();
-            searchHistoryRepository.deleteByUserId(userId);
-            return true;
-        });
+    public Boolean clearSearchHistory() {
+        Long userId = StpUtil.getLoginIdAsLong();
+        searchHistoryRepository.deleteByUserId(userId);
+        return true;
     }
 
     /**
      * Get hot search keywords ranked by search count
      */
-    public Mono<HotSearchVo> getHotSearch(Integer limit) {
-        return Mono.fromCallable(() -> {
-            int effectiveLimit = limit != null ? limit : 10;
-            List<SearchHistory> topHistory = searchHistoryRepository.findTopBySearchCount(effectiveLimit);
+    public HotSearchVo getHotSearch(Integer limit) {
+        int effectiveLimit = limit != null ? limit : 10;
+        List<SearchHistory> topHistory = searchHistoryRepository.findTopBySearchCount(effectiveLimit);
 
-            List<HotSearchVo.HotSearchItem> items = IntStream.range(0, topHistory.size())
-                    .mapToObj(i -> {
-                        SearchHistory history = topHistory.get(i);
-                        HotSearchVo.HotSearchItem item = new HotSearchVo.HotSearchItem();
-                        item.setRank(i + 1);
-                        item.setKeyword(history.getKeyword());
-                        item.setSearchCount(history.getSearchCount());
-                        return item;
-                    })
-                    .collect(Collectors.toList());
+        List<HotSearchVo.HotSearchItem> items = IntStream.range(0, topHistory.size())
+                .mapToObj(i -> {
+                    SearchHistory history = topHistory.get(i);
+                    HotSearchVo.HotSearchItem item = new HotSearchVo.HotSearchItem();
+                    item.setRank(i + 1);
+                    item.setKeyword(history.getKeyword());
+                    item.setSearchCount(history.getSearchCount());
+                    return item;
+                })
+                .collect(Collectors.toList());
 
-            HotSearchVo result = new HotSearchVo();
-            result.setItems(items);
-            return result;
-        });
+        HotSearchVo result = new HotSearchVo();
+        result.setItems(items);
+        return result;
     }
 
     /**
      * Get recommended books for search page cards
      */
-    public Mono<RecommendBooksVo> getRecommendations() {
-        return Mono.fromCallable(() -> {
-            List<BookInfo> recommendedBooks = bookInfoRepository.findRecommendations(20);
+    public RecommendBooksVo getRecommendations() {
+        List<BookInfo> recommendedBooks = bookInfoRepository.findRecommendations(20);
 
-            RecommendBooksVo result = new RecommendBooksVo();
+        RecommendBooksVo result = new RecommendBooksVo();
 
-            if (recommendedBooks.isEmpty()) {
-                result.setCards(new ArrayList<>());
-                return result;
-            }
-
-            // Split into two cards: top stories and popular searches
-            int mid = Math.min(recommendedBooks.size(), 6);
-            List<BookInfo> topBooks = recommendedBooks.subList(0, mid);
-            List<BookInfo> popularBooks = recommendedBooks.size() > mid
-                    ? recommendedBooks.subList(mid, Math.min(recommendedBooks.size(), mid + 6))
-                    : new ArrayList<>();
-
-            RecommendBooksVo.RecommendCard topStoriesCard = new RecommendBooksVo.RecommendCard();
-            topStoriesCard.setTitle("Top Stories");
-            topStoriesCard.setTagMode("false");
-            topStoriesCard.setItems(topBooks.stream()
-                    .map(this::toRecommendBookItem)
-                    .collect(Collectors.toList()));
-
-            RecommendBooksVo.RecommendCard popularSearchesCard = new RecommendBooksVo.RecommendCard();
-            popularSearchesCard.setTitle("Popular Searches");
-            popularSearchesCard.setTagMode("true");
-            popularSearchesCard.setItems(popularBooks.stream()
-                    .map(this::toRecommendBookItem)
-                    .collect(Collectors.toList()));
-
-            result.setCards(List.of(topStoriesCard, popularSearchesCard));
+        if (recommendedBooks.isEmpty()) {
+            result.setCards(new ArrayList<>());
             return result;
-        });
+        }
+
+        // Split into two cards: top stories and popular searches
+        int mid = Math.min(recommendedBooks.size(), 6);
+        List<BookInfo> topBooks = recommendedBooks.subList(0, mid);
+        List<BookInfo> popularBooks = recommendedBooks.size() > mid
+                ? recommendedBooks.subList(mid, Math.min(recommendedBooks.size(), mid + 6))
+                : new ArrayList<>();
+
+        RecommendBooksVo.RecommendCard topStoriesCard = new RecommendBooksVo.RecommendCard();
+        topStoriesCard.setTitle("Top Stories");
+        topStoriesCard.setTagMode("false");
+        topStoriesCard.setItems(topBooks.stream()
+                .map(this::toRecommendBookItem)
+                .collect(Collectors.toList()));
+
+        RecommendBooksVo.RecommendCard popularSearchesCard = new RecommendBooksVo.RecommendCard();
+        popularSearchesCard.setTitle("Popular Searches");
+        popularSearchesCard.setTagMode("true");
+        popularSearchesCard.setItems(popularBooks.stream()
+                .map(this::toRecommendBookItem)
+                .collect(Collectors.toList()));
+
+        result.setCards(List.of(topStoriesCard, popularSearchesCard));
+        return result;
     }
 
     private void saveSearchHistory(Long userId, String keyword) {
@@ -162,21 +149,31 @@ public class SearchAppService {
     private SearchBookItemVo toSearchBookItemVo(BookInfo bookInfo) {
         SearchBookItemVo vo = new SearchBookItemVo();
         vo.setBookId(bookInfo.getId());
-        vo.setBookName(bookInfo.getBookName());
-        vo.setAuthorName(bookInfo.getAuthorName());
-        vo.setCategoryName(bookInfo.getCategoryName());
-        vo.setCoverUrl(bookInfo.getCoverUrl());
+        vo.setBookName(bookInfo.getName());
+        vo.setAuthorName(bookInfo.getAuthor());
+        vo.setCategoryName(resolveCategoryName(bookInfo));
+        vo.setCoverUrl(bookInfo.getCover());
         vo.setDescription(bookInfo.getDescription());
-        vo.setFinishedStatus(bookInfo.getFinishedStatus());
+        vo.setStatus(bookInfo.getStatus());
+        vo.setFinishedStatus(bookInfo.getStatus());
+        vo.setTotalWords(bookInfo.getTotalWords());
+        vo.setScore(bookInfo.getScore());
+        vo.setIsHot(bookInfo.getIsHot());
+        vo.setIsNew(bookInfo.getIsNew());
+        vo.setIsBaoyue(bookInfo.getIsBaoyue());
         return vo;
     }
 
     private RecommendBooksVo.RecommendBookItem toRecommendBookItem(BookInfo bookInfo) {
         RecommendBooksVo.RecommendBookItem item = new RecommendBooksVo.RecommendBookItem();
         item.setBookId(bookInfo.getId());
-        item.setTitle(bookInfo.getBookName());
-        item.setSubtitle(bookInfo.getCategoryName());
-        item.setCoverUrl(bookInfo.getCoverUrl());
+        item.setTitle(bookInfo.getName());
+        item.setSubtitle(bookInfo.getAuthor());
+        item.setCoverUrl(bookInfo.getCover());
         return item;
+    }
+
+    private String resolveCategoryName(BookInfo bookInfo) {
+        return "玄幻";
     }
 }

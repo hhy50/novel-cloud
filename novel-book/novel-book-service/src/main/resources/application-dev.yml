@@ -10,12 +10,13 @@ spring:
         server-addr: localhost:8848
         file-extension: yml
   datasource:
-    url: jdbc:mysql://217.142.150.202:3306/novel_book?useUnicode=true&characterEncoding=utf8&serverTimezone=Asia/Shanghai
+    url: jdbc:mysql://172.28.123.239:3306/novel_book?useUnicode=true&characterEncoding=utf8&serverTimezone=Asia/Shanghai
     username: root
-    password: root123456
+    password: 123456
     driver-class-name: com.mysql.cj.jdbc.Driver
-  redis:
-    host: 217.142.150.202
-    port: 6379
-    #    password:
-    database: 1
+  data:
+    redis:
+      host: 172.28.123.239
+      port: 6379
+      #    password:
+      database: 0

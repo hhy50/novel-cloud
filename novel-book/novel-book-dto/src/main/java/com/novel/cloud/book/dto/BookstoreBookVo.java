@@ -20,7 +20,24 @@ public class BookstoreBookVo implements Serializable {
 
     private String description;
 
-    private String coverHexColor;
+    /** 封面 URL */
+    private String coverUrl;
 
-    private List<BookChapterVo> chapters;
+    /** 是否为热门作品 */
+    private Integer isHot;
+
+    /** 是否为新品 */
+    private Integer isNew;
+
+    /** 是否为限时免费 */
+    private Integer isLimitedFree;
+
+    /** 是否为会员作品 */
+    private Integer isBaoyue;
+
+    /** 评分 (0-10) */
+    private Integer score;
+
+    /** 章节总数 */
+    private Integer totalChapters;
 }

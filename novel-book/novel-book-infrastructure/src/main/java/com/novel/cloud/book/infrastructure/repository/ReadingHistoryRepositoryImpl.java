@@ -51,4 +51,23 @@ public class ReadingHistoryRepositoryImpl implements ReadingHistoryRepository {
         BeanUtils.copyProperties(history, historyDO);
         readingHistoryMapper.insert(historyDO);
     }
+
+    @Override
+    public ReadingHistory findLastReadByUserIdAndBookId(Long userId, Long bookId) {
+        ReadingHistoryDO historyDO = readingHistoryMapper.selectOne(
+                new LambdaQueryWrapper<ReadingHistoryDO>()
+                        .eq(ReadingHistoryDO::getUserId, userId)
+                        .eq(ReadingHistoryDO::getBookId, bookId)
+                        .orderByDesc(ReadingHistoryDO::getCreateTime)
+                        .last("LIMIT 1")
+        );
+
+        if (historyDO == null) {
+            return null;
+        }
+
+        ReadingHistory history = new ReadingHistory();
+        BeanUtils.copyProperties(historyDO, history);
+        return history;
+    }
 }

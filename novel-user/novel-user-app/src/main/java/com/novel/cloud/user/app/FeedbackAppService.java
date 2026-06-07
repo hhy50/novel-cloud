@@ -7,7 +7,6 @@ import com.novel.cloud.user.dto.SubmitFeedbackDto;
 import com.novel.cloud.user.dto.SubmitFeedbackVo;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
-import reactor.core.publisher.Mono;
 
 /**
  * Feedback application service
@@ -18,24 +17,21 @@ public class FeedbackAppService {
 
     private final UserFeedbackRepository userFeedbackRepository;
 
-    public Mono<SubmitFeedbackVo> submitFeedback(SubmitFeedbackDto params) {
-        return Mono.fromCallable(() -> {
-            Long userId = StpUtil.getLoginIdAsLong();
+    public SubmitFeedbackVo submitFeedback(SubmitFeedbackDto params) {
+        Long userId = StpUtil.getLoginIdAsLong();
+        UserFeedback feedback = new UserFeedback();
+        feedback.setUserId(userId);
+        feedback.setCategory(params.getCategory());
+        feedback.setContent(params.getContent());
+        feedback.setContact(params.getContact());
+        feedback.setImages(params.getImages());
+        feedback.setStatus(0); // Pending
 
-            UserFeedback feedback = new UserFeedback();
-            feedback.setUserId(userId);
-            feedback.setCategory(params.getCategory());
-            feedback.setContent(params.getContent());
-            feedback.setContact(params.getContact());
-            feedback.setImages(params.getImages());
-            feedback.setStatus(0); // Pending
+        userFeedbackRepository.save(feedback);
 
-            userFeedbackRepository.save(feedback);
-
-            SubmitFeedbackVo vo = new SubmitFeedbackVo();
-            vo.setSuccess(true);
-            vo.setMessage("Feedback submitted successfully. Thank you!");
-            return vo;
-        });
+        SubmitFeedbackVo vo = new SubmitFeedbackVo();
+        vo.setSuccess(true);
+        vo.setMessage("Feedback submitted successfully. Thank you!");
+        return vo;
     }
 }

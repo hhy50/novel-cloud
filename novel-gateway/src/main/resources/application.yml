@@ -37,3 +37,13 @@ spring:
             - Path=/api/payment/**
           filters:
             - StripPrefix=0
+        - id: novel-activity-service
+          uri: lb://novel-activity
+          predicates:
+            - Path=/api/activity/**
+          filters:
+            - StripPrefix=0
+
+logging:
+  pattern:
+    level: "%5p [${spring.application.name:-},%X{traceId:-}]"

@@ -14,4 +14,11 @@ public class BookChapterListQueryDto implements Serializable {
 
     @NotNull(message = "bookId can not be null")
     private Long bookId;
+
+    /**
+     * 查询数量限制
+     * 默认值: 10
+     * -1 表示查询全部章节
+     */
+    private Integer length = 10;
 }

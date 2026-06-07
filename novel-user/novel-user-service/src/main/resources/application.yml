@@ -14,11 +14,13 @@ spring:
 mybatis-plus:
   configuration:
     map-underscore-to-camel-case: true
+    log-impl: org.apache.ibatis.logging.slf4j.Slf4jImpl
   global-config:
     db-config:
       id-type: auto
 
 sa-token:
+  token-name: Authorization
   timeout: -1
   activity-timeout: -1
   is-auto-renew: false
@@ -26,10 +28,15 @@ sa-token:
   is-share: true
   token-style: random-128
   is-log: true
-  jwt-secret-key: novel-user-secret-key-change-me
 
 management:
   endpoints:
     web:
       exposure:
         include: '*'
+
+logging:
+  pattern:
+    level: "%5p [${spring.application.name:-},%X{traceId:-}]"
+  level:
+    com.novel.cloud.user.infrastructure.mapper: DEBUG

@@ -38,6 +38,5 @@ public class RecommendBooksVo implements Serializable {
         private String title;
         private String subtitle;
         private String coverUrl;
-        private String coverHexColor;
     }
 }

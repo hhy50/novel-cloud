@@ -9,7 +9,6 @@ import com.novel.cloud.user.dto.UserLoginDto;
 import com.novel.cloud.user.dto.UserLoginVo;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
-import reactor.core.publisher.Mono;
 
 /**
  * 用户应用服务
@@ -21,11 +20,7 @@ public class UserAppService {
     private final UserInfoRepository userInfoRepository;
     private final UserDomainService userDomainService;
 
-    public Mono<UserLoginVo> login(UserLoginDto params) {
-        return Mono.fromCallable(() -> doLogin(params));
-    }
-
-    private UserLoginVo doLogin(UserLoginDto params) {
+    public UserLoginVo login(UserLoginDto params) {
         UserInfo userInfo = userInfoRepository.findByDeviceId(params.getDeviceId());
         if (userInfo == null) {
             // 新用户：创建访客
@@ -42,8 +37,8 @@ public class UserAppService {
         }
 
         UserLoginVo userLoginVo = new UserLoginVo()
-                .setToken(userInfo.getToken())
                 .setUserId(userInfo.getId())
+                .setToken(userInfo.getToken())
                 .setNickname(userInfo.getNickname());
         return userLoginVo;
     }

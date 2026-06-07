@@ -11,7 +11,6 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
-import reactor.core.publisher.Mono;
 
 /**
  * 订阅 Open API Controller（服务间调用接口）
@@ -26,7 +25,7 @@ public class SubscribeOpenController {
     private final SubscribeAppService subscribeAppService;
 
     @PostMapping("/activate")
-    public Mono<R<UserSubscribeVo>> activateSubscribe(@Valid @RequestBody SubscribeActivateDto dto) {
-        return subscribeAppService.activateSubscribe(dto).map(R::ok);
+    public R<UserSubscribeVo> activateSubscribe(@Valid @RequestBody SubscribeActivateDto dto) {
+        return R.ok(subscribeAppService.activateSubscribe(dto));
     }
 }

@@ -11,7 +11,6 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
-import reactor.core.publisher.Mono;
 
 @Validated
 @RestController
@@ -22,14 +21,14 @@ public class EventTrackController {
     private final EventTrackAppService eventTrackAppService;
 
     @PostMapping("/event/report")
-    public Mono<R<Void>> reportEvent(@Valid @RequestBody EventReportDto params) {
+    public R<Void> reportEvent(@Valid @RequestBody EventReportDto params) {
         Long userId = null;
         try {
             userId = StpUtil.getLoginIdAsLong();
         } catch (Exception ignored) {
             // 未登录用户也允许上报事件
         }
-        return eventTrackAppService.reportEvent(userId, params.getDeviceId(), params.getAppVersion(), params)
-                .thenReturn(R.ok());
+        eventTrackAppService.reportEvent(userId, params.getDeviceId(), params.getAppVersion(), params);
+        return R.ok();
     }
 }

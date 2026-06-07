@@ -71,4 +71,9 @@ public class UserBookshelfRepositoryImpl implements UserBookshelfRepository {
     public void updateLastRead(Long userId, Long bookId, Long chapterId) {
         userBookshelfMapper.updateLastRead(userId, bookId, chapterId);
     }
+
+    @Override
+    public void addOrUpdate(Long userId, Long bookId, Long chapterId) {
+        userBookshelfMapper.upsert(userId, bookId, chapterId);
+    }
 }

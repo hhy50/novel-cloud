@@ -15,10 +15,9 @@ import com.novel.cloud.subscribe.dto.UserSubscribeVo;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import reactor.core.publisher.Flux;
-import reactor.core.publisher.Mono;
 
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 /**
@@ -34,93 +33,77 @@ public class SubscribeAppService {
     private final SubscribeDomainService subscribeDomainService;
     private final PaymentOpenFeignApi paymentOpenFeignApi;
 
-    public Mono<List<SubscribePlan>> listPlans() {
-        return Mono.fromCallable(subscribePlanRepository::listOnShelfPlans);
+    public List<SubscribePlan> listPlans() {
+        return subscribePlanRepository.listOnShelfPlans();
     }
 
     @Transactional(rollbackFor = Exception.class)
-    public Mono<UserSubscribeVo> createSubscribe(SubscribeCreateDto dto) {
-        return Mono.fromCallable(() -> subscribePlanRepository.findById(dto.getPlanId()))
-                .flatMap(plan -> {
-                    if (plan == null) {
-                        return Mono.error(new BusinessException("订阅计划不存在"));
-                    }
-                    UserSubscribe subscribe = subscribeDomainService.initPendingSubscribe(dto.getUserId(), plan.getId());
-                    return Mono.fromCallable(() -> userSubscribeRepository.save(subscribe))
-                            .flatMap(saved -> createPaymentOrder(dto, plan, saved));
-                });
+    public UserSubscribeVo createSubscribe(SubscribeCreateDto dto) {
+        SubscribePlan plan = subscribePlanRepository.findById(dto.getPlanId());
+        if (plan == null) {
+            throw new BusinessException("订阅计划不存在");
+        }
+        UserSubscribe subscribe = subscribeDomainService.initPendingSubscribe(dto.getUserId(), plan.getId());
+        UserSubscribe saved = userSubscribeRepository.save(subscribe);
+        return createPaymentOrder(dto, plan, saved);
     }
 
     @Transactional(rollbackFor = Exception.class)
-    public Mono<UserSubscribeVo> activateSubscribe(SubscribeActivateDto dto) {
-        return Mono.fromCallable(() -> userSubscribeRepository.findById(dto.getSubscribeId()))
-                .flatMap(subscribe -> {
-                    if (subscribe == null) {
-                        return Mono.error(new BusinessException("订阅记录不存在"));
-                    }
-                    return Mono.fromCallable(() -> subscribePlanRepository.findById(subscribe.getPlanId()))
-                            .flatMap(plan -> {
-                                if (plan == null) {
-                                    return Mono.error(new BusinessException("订阅计划不存在"));
-                                }
-                                UserSubscribe activated = subscribeDomainService.activate(subscribe, plan, dto.getOrderNo());
-                                return Mono.fromCallable(() -> userSubscribeRepository.update(activated))
-                                        .map(updated -> toSubscribeVo(updated, plan));
-                            });
-                });
+    public UserSubscribeVo activateSubscribe(SubscribeActivateDto dto) {
+        UserSubscribe subscribe = userSubscribeRepository.findById(dto.getSubscribeId());
+        if (subscribe == null) {
+            throw new BusinessException("订阅记录不存在");
+        }
+        SubscribePlan plan = subscribePlanRepository.findById(subscribe.getPlanId());
+        if (plan == null) {
+            throw new BusinessException("订阅计划不存在");
+        }
+        UserSubscribe activated = subscribeDomainService.activate(subscribe, plan, dto.getOrderNo());
+        UserSubscribe updated = userSubscribeRepository.update(activated);
+        return toSubscribeVo(updated, plan);
     }
 
-    public Mono<UserSubscribeVo> getUserActiveSubscribe(Long userId) {
-        return Mono.fromCallable(() -> userSubscribeRepository.findActiveByUserId(userId))
-                .flatMap(subscribe -> {
-                    if (subscribe == null) {
-                        return Mono.empty();
-                    }
-                    boolean expired = subscribeDomainService.checkAndMarkExpired(subscribe) != null && subscribe.getStatus() == 2;
-                    Mono<UserSubscribe> subscribeMono = expired
-                            ? Mono.fromCallable(() -> userSubscribeRepository.update(subscribe))
-                            : Mono.just(subscribe);
-                    return subscribeMono.flatMap(current -> Mono.fromCallable(() -> subscribePlanRepository.findById(current.getPlanId()))
-                            .map(plan -> toSubscribeVo(current, plan)));
-                });
+    public UserSubscribeVo getUserActiveSubscribe(Long userId) {
+        UserSubscribe subscribe = userSubscribeRepository.findActiveByUserId(userId);
+        if (subscribe == null) {
+            return null;
+        }
+        boolean expired = subscribeDomainService.checkAndMarkExpired(subscribe) != null && subscribe.getStatus() == 2;
+        UserSubscribe current = expired ? userSubscribeRepository.update(subscribe) : subscribe;
+        SubscribePlan plan = subscribePlanRepository.findById(current.getPlanId());
+        return toSubscribeVo(current, plan);
     }
 
-    public Flux<UserSubscribeVo> getUserSubscribeHistory(Long userId) {
-        return Mono.fromCallable(() -> userSubscribeRepository.listByUserId(userId))
-                .flatMapMany(subscribes -> {
-                    List<Long> planIds = subscribes.stream()
-                            .map(UserSubscribe::getPlanId)
-                            .distinct()
-                            .collect(Collectors.toList());
-                    if (planIds.isEmpty()) {
-                        return Flux.fromIterable(subscribes.stream().map(s -> toSubscribeVo(s, null)).toList());
-                    }
-                    return Mono.fromCallable(() -> subscribePlanRepository.findByIds(planIds))
-                            .flatMapMany(plans -> {
-                                var planMap = plans.stream().collect(Collectors.toMap(SubscribePlan::getId, p -> p));
-                                return Flux.fromIterable(subscribes.stream()
-                                        .map(s -> toSubscribeVo(s, planMap.get(s.getPlanId())))
-                                        .toList());
-                            });
-                });
+    public List<UserSubscribeVo> getUserSubscribeHistory(Long userId) {
+        List<UserSubscribe> subscribes = userSubscribeRepository.listByUserId(userId);
+        List<Long> planIds = subscribes.stream()
+                .map(UserSubscribe::getPlanId)
+                .distinct()
+                .collect(Collectors.toList());
+        if (planIds.isEmpty()) {
+            return subscribes.stream().map(s -> toSubscribeVo(s, null)).collect(Collectors.toList());
+        }
+        List<SubscribePlan> plans = subscribePlanRepository.findByIds(planIds);
+        Map<Long, SubscribePlan> planMap = plans.stream().collect(Collectors.toMap(SubscribePlan::getId, p -> p));
+        return subscribes.stream()
+                .map(s -> toSubscribeVo(s, planMap.get(s.getPlanId())))
+                .collect(Collectors.toList());
     }
 
-    private Mono<UserSubscribeVo> createPaymentOrder(SubscribeCreateDto dto, SubscribePlan plan, UserSubscribe saved) {
+    private UserSubscribeVo createPaymentOrder(SubscribeCreateDto dto, SubscribePlan plan, UserSubscribe saved) {
         PaymentCreateDto paymentDto = new PaymentCreateDto();
         paymentDto.setUserId(dto.getUserId());
         paymentDto.setAmount(plan.getPrice());
         paymentDto.setPayChannel(dto.getPayChannel());
         paymentDto.setSubscribeId(saved.getId());
-        return Mono.fromCallable(() -> paymentOpenFeignApi.createPayment(paymentDto))
-                .map(paymentR -> {
-                    if (paymentR == null || paymentR.getCode() != 0 || paymentR.getData() == null) {
-                        throw new BusinessException(paymentR == null ? "创建支付订单失败" : "创建支付订单失败: " + paymentR.getMessage());
-                    }
-                    PaymentResultVo paymentResult = paymentR.getData();
-                    UserSubscribe subscribed = subscribeDomainService.bindOrderNo(saved, paymentResult.getOrderNo());
-                    userSubscribeRepository.update(subscribed);
-                    return toSubscribeVo(subscribed, plan);
-                });
+        com.novel.cloud.common.domain.R<PaymentResultVo> paymentR = paymentOpenFeignApi.createPayment(paymentDto);
+        if (paymentR == null || paymentR.getCode() != 0 || paymentR.getData() == null) {
+            throw new BusinessException(paymentR == null ? "创建支付订单失败" : "创建支付订单失败: " + paymentR.getMessage());
+        }
+        PaymentResultVo paymentResult = paymentR.getData();
+        UserSubscribe subscribed = subscribeDomainService.bindOrderNo(saved, paymentResult.getOrderNo());
+        userSubscribeRepository.update(subscribed);
+        return toSubscribeVo(subscribed, plan);
     }
 
     private UserSubscribeVo toSubscribeVo(UserSubscribe subscribe, SubscribePlan plan) {

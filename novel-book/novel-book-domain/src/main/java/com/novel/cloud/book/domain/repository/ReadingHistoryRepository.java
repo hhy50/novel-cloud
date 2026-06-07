@@ -13,4 +13,9 @@ public interface ReadingHistoryRepository {
     int countByUserId(Long userId);
 
     void save(ReadingHistory history);
+
+    /**
+     * 查询用户对特定书籍的最后阅读记录
+     */
+    ReadingHistory findLastReadByUserIdAndBookId(Long userId, Long bookId);
 }
