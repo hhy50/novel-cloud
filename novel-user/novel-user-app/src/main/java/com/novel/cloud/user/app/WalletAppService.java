@@ -14,7 +14,10 @@ import java.util.Map;
 import java.util.stream.Collectors;
 
 /**
- * Wallet and rewards application service
+ * Wallet and rewards application service.
+ *
+ * <p>注：签到逻辑已迁出至 {@code novel-activity} 模块（{@code CheckinAppService}），
+ * 本服务不再持有 DailyCheckin 相关字段或方法。</p>
  */
 @Service
 @RequiredArgsConstructor
@@ -22,7 +25,6 @@ public class WalletAppService {
 
     private final UserWalletRepository userWalletRepository;
     private final CoinRecordRepository coinRecordRepository;
-    private final DailyCheckinRepository dailyCheckinRepository;
     private final DailyTaskRepository dailyTaskRepository;
     private final UserTaskRecordRepository userTaskRecordRepository;
 
@@ -78,78 +80,6 @@ public class WalletAppService {
         result.setRecords(recordVos);
         result.setTotal(total);
         return result;
-    }
-
-    public CheckinStatusVo getCheckinStatus() {
-        Long userId = StpUtil.getLoginIdAsLong();
-        LocalDate today = LocalDate.now();
-
-        DailyCheckin todayCheckin = dailyCheckinRepository.findByUserIdAndDate(userId, today);
-        DailyCheckin latestCheckin = dailyCheckinRepository.findLatestByUserId(userId);
-
-        CheckinStatusVo statusVo = new CheckinStatusVo();
-        statusVo.setCheckedToday(todayCheckin != null);
-
-        int consecutiveDays = latestCheckin != null ? latestCheckin.getConsecutiveDays() : 0;
-        statusVo.setConsecutiveDays(consecutiveDays);
-
-        // Calculate next reward based on consecutive days
-        int nextRewardCoins = calculateCheckinReward(consecutiveDays + 1);
-        statusVo.setNextRewardCoins(nextRewardCoins);
-        statusVo.setNextRewardPoints(nextRewardCoins / 2);
-
-        return statusVo;
-    }
-
-    @Transactional
-    public CheckinVo performCheckin() {
-        Long userId = StpUtil.getLoginIdAsLong();
-        LocalDate today = LocalDate.now();
-
-        // Check if already checked in today
-        DailyCheckin todayCheckin = dailyCheckinRepository.findByUserIdAndDate(userId, today);
-        if (todayCheckin != null) {
-            CheckinVo vo = new CheckinVo();
-            vo.setSuccess(false);
-            vo.setMessage("Already checked in today");
-            return vo;
-        }
-
-        // Get latest check-in to calculate consecutive days
-        DailyCheckin latestCheckin = dailyCheckinRepository.findLatestByUserId(userId);
-        int consecutiveDays = 1;
-
-        if (latestCheckin != null) {
-            LocalDate yesterday = today.minusDays(1);
-            if (latestCheckin.getCheckinDate().equals(yesterday)) {
-                consecutiveDays = latestCheckin.getConsecutiveDays() + 1;
-            }
-        }
-
-        // Calculate rewards
-        int rewardCoins = calculateCheckinReward(consecutiveDays);
-        int rewardPoints = rewardCoins / 2;
-
-        // Save check-in record
-        DailyCheckin checkin = new DailyCheckin();
-        checkin.setUserId(userId);
-        checkin.setCheckinDate(today);
-        checkin.setConsecutiveDays(consecutiveDays);
-        checkin.setRewardCoins(rewardCoins);
-        checkin.setRewardPoints(rewardPoints);
-        dailyCheckinRepository.save(checkin);
-
-        // Update wallet
-        addCoins(userId, rewardCoins, "CHECKIN", "Daily check-in reward");
-        addPoints(userId, rewardPoints, "CHECKIN", "Daily check-in reward");
-
-        CheckinVo vo = new CheckinVo();
-        vo.setSuccess(true);
-        vo.setConsecutiveDays(consecutiveDays);
-        vo.setRewardCoins(rewardCoins);
-        vo.setRewardPoints(rewardPoints);
-        vo.setMessage("Check-in successful!");
-        return vo;
     }
 
     public DailyTasksVo getDailyTasks() {
@@ -255,13 +185,6 @@ public class WalletAppService {
             userWalletRepository.save(wallet);
         }
         return wallet;
-    }
-
-    private int calculateCheckinReward(int consecutiveDays) {
-        // Base reward + bonus for consecutive days
-        int baseReward = 10;
-        int bonus = Math.min((consecutiveDays - 1) * 2, 20); // Max bonus: 20 coins
-        return baseReward + bonus;
     }
 
     @Transactional

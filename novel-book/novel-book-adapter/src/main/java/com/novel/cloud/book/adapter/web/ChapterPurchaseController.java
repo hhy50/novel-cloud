@@ -1,8 +1,8 @@
 package com.novel.cloud.book.adapter.web;
 
 import com.novel.cloud.book.app.ChapterPurchaseAppService;
-import com.novel.cloud.book.dto.PurchaseChapterDto;
-import com.novel.cloud.book.dto.PurchaseChapterVo;
+import com.novel.cloud.book.dto.request.PurchaseChapterReq;
+import com.novel.cloud.book.dto.response.PurchaseChapterResp;
 import com.novel.cloud.common.domain.R;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -24,7 +24,7 @@ public class ChapterPurchaseController {
     private final ChapterPurchaseAppService chapterPurchaseAppService;
 
     @PostMapping("/purchase")
-    public R<PurchaseChapterVo> purchaseChapter(@Valid @RequestBody PurchaseChapterDto params) {
+    public R<PurchaseChapterResp> purchaseChapter(@Valid @RequestBody PurchaseChapterReq params) {
         return R.ok(chapterPurchaseAppService.purchaseChapter(params));
     }
 }

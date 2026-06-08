@@ -2,13 +2,11 @@ package com.novel.cloud.book.app;
 
 import cn.dev33.satoken.stp.StpUtil;
 import com.novel.cloud.book.domain.entity.BookInfo;
-import com.novel.cloud.book.domain.entity.UserBookshelf;
-import com.novel.cloud.book.domain.repository.BookInfoRepository;
-import com.novel.cloud.book.domain.repository.UserBookshelfRepository;
-import com.novel.cloud.book.dto.AddBookshelfDto;
-import com.novel.cloud.book.dto.BookshelfItemVo;
-import com.novel.cloud.book.dto.BookshelfVo;
-import com.novel.cloud.book.dto.RemoveBookshelfDto;
+import com.novel.cloud.book.domain.service.BookshelfDomainService;
+import com.novel.cloud.book.dto.request.AddBookshelfReq;
+import com.novel.cloud.book.dto.request.RemoveBookshelfReq;
+import com.novel.cloud.book.dto.response.BookshelfResp;
+import com.novel.cloud.book.dto.vo.BookshelfItemVo;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -16,80 +14,60 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.List;
 import java.util.stream.Collectors;
 
-/**
- * Bookshelf application service
- */
 @Service
 @RequiredArgsConstructor
 public class BookshelfAppService {
 
-    private final UserBookshelfRepository userBookshelfRepository;
-    private final BookInfoRepository bookInfoRepository;
+    private final BookshelfDomainService bookshelfDomainService;
 
-    public BookshelfVo getBookshelf() {
+    public BookshelfResp getBookshelf() {
         Long userId = StpUtil.getLoginIdAsLong();
-        List<UserBookshelf> bookshelfList = userBookshelfRepository.findByUserId(userId);
+        List<BookshelfDomainService.BookshelfItemResult> items = bookshelfDomainService.getBookshelf(userId);
 
-        List<BookshelfItemVo> items = bookshelfList.stream()
-                .map(bookshelf -> {
-                    BookInfo bookInfo = bookInfoRepository.findById(bookshelf.getBookId());
-                    if (bookInfo == null) {
-                        return null;
-                    }
-                    BookshelfItemVo item = new BookshelfItemVo();
-                    item.setBookId(bookInfo.getId());
-                    item.setBookName(bookInfo.getName());
-                    item.setAuthorName(bookInfo.getAuthor());
-                    item.setCoverUrl(bookInfo.getCover());
-                    item.setDescription(bookInfo.getDescription());
-                    item.setFinished(bookInfo.getStatus() != null && bookInfo.getStatus() == 2);
-                    item.setStatus(bookInfo.getStatus());
-                    item.setTotalWords(bookInfo.getTotalWords());
-                    item.setTotalChapters(bookInfo.getTotalChapters());
-                    item.setScore(bookInfo.getScore());
-                    item.setLastChapterId(bookshelf.getLastChapterId());
-                    // TODO: get chapter title from chapter repository
-                    item.setLastChapterTitle("Chapter " + (bookshelf.getLastChapterId() != null ? bookshelf.getLastChapterId() : ""));
-                    item.setLastReadTime(bookshelf.getLastReadTime());
-                    item.setLatestChapterId(bookInfo.getLastChapterId());
-                    return item;
-                })
-                .filter(item -> item != null)
+        List<BookshelfItemVo> itemVos = items.stream()
+                .map(this::toBookshelfItemVo)
                 .collect(Collectors.toList());
 
-        BookshelfVo result = new BookshelfVo();
-        result.setBooks(items);
-        result.setTotal(items.size());
+        BookshelfResp result = new BookshelfResp();
+        result.setBooks(itemVos);
+        result.setTotal(itemVos.size());
         return result;
     }
 
     @Transactional
-    public Boolean addToBookshelf(AddBookshelfDto params) {
+    public Boolean addToBookshelf(AddBookshelfReq params) {
         Long userId = StpUtil.getLoginIdAsLong();
-        // Check if already exists
-        UserBookshelf existing = userBookshelfRepository.findByUserIdAndBookId(userId, params.getBookId());
-        if (existing != null) {
-            return true;
-        }
-
-        // Verify book exists
-        BookInfo bookInfo = bookInfoRepository.findById(params.getBookId());
-        if (bookInfo == null) {
+        boolean success = bookshelfDomainService.addToBookshelf(userId, params.getBookId());
+        if (!success) {
             throw new RuntimeException("Book not found");
         }
-
-        UserBookshelf bookshelf = new UserBookshelf();
-        bookshelf.setUserId(userId);
-        bookshelf.setBookId(params.getBookId());
-        userBookshelfRepository.save(bookshelf);
-
         return true;
     }
 
     @Transactional
-    public Boolean removeFromBookshelf(RemoveBookshelfDto params) {
+    public Boolean removeFromBookshelf(RemoveBookshelfReq params) {
         Long userId = StpUtil.getLoginIdAsLong();
-        userBookshelfRepository.deleteByUserIdAndBookId(userId, params.getBookId());
+        bookshelfDomainService.removeFromBookshelf(userId, params.getBookId());
         return true;
+    }
+
+    private BookshelfItemVo toBookshelfItemVo(BookshelfDomainService.BookshelfItemResult item) {
+        BookInfo bookInfo = item.getBookInfo();
+        BookshelfItemVo vo = new BookshelfItemVo();
+        vo.setBookId(bookInfo.getId());
+        vo.setBookName(bookInfo.getName());
+        vo.setAuthorName(bookInfo.getAuthor());
+        vo.setCoverUrl(bookInfo.getCover());
+        vo.setDescription(bookInfo.getDescription());
+        vo.setFinished(bookInfo.isFinished());
+        vo.setStatus(bookInfo.getStatus());
+        vo.setTotalWords(bookInfo.getTotalWords());
+        vo.setTotalChapters(bookInfo.getTotalChapters());
+        vo.setScore(bookInfo.getScore());
+        vo.setLastChapterId(item.getBookshelf().getLastChapterId());
+        vo.setLastChapterTitle("Chapter " + (item.getBookshelf().getLastChapterId() != null ? item.getBookshelf().getLastChapterId() : ""));
+        vo.setLastReadTime(item.getBookshelf().getLastReadTime());
+        vo.setLatestChapterId(bookInfo.getLastChapterId());
+        return vo;
     }
 }

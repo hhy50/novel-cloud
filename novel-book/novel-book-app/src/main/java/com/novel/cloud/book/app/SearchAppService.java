@@ -2,63 +2,51 @@ package com.novel.cloud.book.app;
 
 import cn.dev33.satoken.stp.StpUtil;
 import com.novel.cloud.book.domain.entity.BookInfo;
-import com.novel.cloud.book.domain.entity.SearchHistory;
-import com.novel.cloud.book.domain.repository.BookInfoRepository;
-import com.novel.cloud.book.domain.repository.SearchHistoryRepository;
-import com.novel.cloud.book.dto.*;
-import com.novel.cloud.common.domain.PageResult;
+import com.novel.cloud.book.domain.service.SearchDomainService;
+import com.novel.cloud.book.dto.request.SearchBooksReq;
+import com.novel.cloud.book.dto.response.HotSearchResp;
+import com.novel.cloud.book.dto.response.RecommendBooksResp;
+import com.novel.cloud.book.dto.response.SearchBooksResp;
+import com.novel.cloud.book.dto.response.SearchHistoryResp;
+import com.novel.cloud.book.dto.vo.HotSearchItemVo;
+import com.novel.cloud.book.dto.vo.RecommendBookItemVo;
+import com.novel.cloud.book.dto.vo.RecommendCardVo;
+import com.novel.cloud.book.dto.vo.SearchBookItemVo;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
-import java.util.stream.IntStream;
 
-/**
- * Search application service
- */
 @Service
 @RequiredArgsConstructor
 public class SearchAppService {
 
-    private final SearchHistoryRepository searchHistoryRepository;
-    private final BookInfoRepository bookInfoRepository;
+    private final SearchDomainService searchDomainService;
 
     @Transactional
-    public SearchBooksVo searchBooks(SearchBooksDto params) {
+    public SearchBooksResp searchBooks(SearchBooksReq params) {
         Long userId = StpUtil.getLoginIdAsLong();
-        // Save search history
-        saveSearchHistory(userId, params.getKeyword());
+        SearchDomainService.SearchResult result = searchDomainService.searchBooks(
+                userId, params.getKeyword(), params.getPage(), params.getPageSize());
 
-        // Search books by keyword (single paginated query)
-        PageResult<BookInfo> pageResult = bookInfoRepository.searchByKeyword(
-                params.getKeyword(),
-                params.getPage(),
-                params.getPageSize()
-        );
-
-        List<SearchBookItemVo> itemVos = pageResult.getRecords().stream()
+        List<SearchBookItemVo> itemVos = result.getBooks().stream()
                 .map(this::toSearchBookItemVo)
                 .collect(Collectors.toList());
 
-        SearchBooksVo result = new SearchBooksVo();
-        result.setBooks(itemVos);
-        result.setTotal((int) pageResult.getTotal());
-        result.setKeyword(params.getKeyword());
-        return result;
+        SearchBooksResp vo = new SearchBooksResp();
+        vo.setBooks(itemVos);
+        vo.setTotal((int) result.getTotal());
+        vo.setKeyword(result.getKeyword());
+        return vo;
     }
 
-    public SearchHistoryVo getSearchHistory() {
+    public SearchHistoryResp getSearchHistory() {
         Long userId = StpUtil.getLoginIdAsLong();
-        List<SearchHistory> historyList = searchHistoryRepository.findByUserId(userId, 10);
+        List<String> keywords = searchDomainService.getSearchHistory(userId, 10);
 
-        List<String> keywords = historyList.stream()
-                .map(SearchHistory::getKeyword)
-                .collect(Collectors.toList());
-
-        SearchHistoryVo result = new SearchHistoryVo();
+        SearchHistoryResp result = new SearchHistoryResp();
         result.setKeywords(keywords);
         return result;
     }
@@ -66,84 +54,45 @@ public class SearchAppService {
     @Transactional
     public Boolean clearSearchHistory() {
         Long userId = StpUtil.getLoginIdAsLong();
-        searchHistoryRepository.deleteByUserId(userId);
+        searchDomainService.clearSearchHistory(userId);
         return true;
     }
 
-    /**
-     * Get hot search keywords ranked by search count
-     */
-    public HotSearchVo getHotSearch(Integer limit) {
-        int effectiveLimit = limit != null ? limit : 10;
-        List<SearchHistory> topHistory = searchHistoryRepository.findTopBySearchCount(effectiveLimit);
+    public HotSearchResp getHotSearch(Integer limit) {
+        SearchDomainService.HotSearchResult hotResult = searchDomainService.getHotSearch(
+                limit != null ? limit : 10);
 
-        List<HotSearchVo.HotSearchItem> items = IntStream.range(0, topHistory.size())
-                .mapToObj(i -> {
-                    SearchHistory history = topHistory.get(i);
-                    HotSearchVo.HotSearchItem item = new HotSearchVo.HotSearchItem();
-                    item.setRank(i + 1);
-                    item.setKeyword(history.getKeyword());
-                    item.setSearchCount(history.getSearchCount());
-                    return item;
+        List<HotSearchItemVo> items = hotResult.getItems().stream()
+                .map(item -> {
+                    HotSearchItemVo voItem = new HotSearchItemVo();
+                    voItem.setRank(item.getRank());
+                    voItem.setKeyword(item.getKeyword());
+                    voItem.setSearchCount(item.getSearchCount());
+                    return voItem;
                 })
                 .collect(Collectors.toList());
 
-        HotSearchVo result = new HotSearchVo();
+        HotSearchResp result = new HotSearchResp();
         result.setItems(items);
         return result;
     }
 
-    /**
-     * Get recommended books for search page cards
-     */
-    public RecommendBooksVo getRecommendations() {
-        List<BookInfo> recommendedBooks = bookInfoRepository.findRecommendations(20);
+    public RecommendBooksResp getRecommendations() {
+        SearchDomainService.RecommendBooksResult recResult = searchDomainService.getRecommendations(20);
 
-        RecommendBooksVo result = new RecommendBooksVo();
-
-        if (recommendedBooks.isEmpty()) {
-            result.setCards(new ArrayList<>());
-            return result;
-        }
-
-        // Split into two cards: top stories and popular searches
-        int mid = Math.min(recommendedBooks.size(), 6);
-        List<BookInfo> topBooks = recommendedBooks.subList(0, mid);
-        List<BookInfo> popularBooks = recommendedBooks.size() > mid
-                ? recommendedBooks.subList(mid, Math.min(recommendedBooks.size(), mid + 6))
-                : new ArrayList<>();
-
-        RecommendBooksVo.RecommendCard topStoriesCard = new RecommendBooksVo.RecommendCard();
-        topStoriesCard.setTitle("Top Stories");
-        topStoriesCard.setTagMode("false");
-        topStoriesCard.setItems(topBooks.stream()
-                .map(this::toRecommendBookItem)
+        RecommendBooksResp result = new RecommendBooksResp();
+        result.setCards(recResult.getCards().stream()
+                .map(card -> {
+                    RecommendCardVo voCard = new RecommendCardVo();
+                    voCard.setTitle(card.getTitle());
+                    voCard.setTagMode(card.getTagMode());
+                    voCard.setItems(card.getItems().stream()
+                            .map(item -> toRecommendBookItemVo(item.getBookInfo()))
+                            .collect(Collectors.toList()));
+                    return voCard;
+                })
                 .collect(Collectors.toList()));
-
-        RecommendBooksVo.RecommendCard popularSearchesCard = new RecommendBooksVo.RecommendCard();
-        popularSearchesCard.setTitle("Popular Searches");
-        popularSearchesCard.setTagMode("true");
-        popularSearchesCard.setItems(popularBooks.stream()
-                .map(this::toRecommendBookItem)
-                .collect(Collectors.toList()));
-
-        result.setCards(List.of(topStoriesCard, popularSearchesCard));
         return result;
-    }
-
-    private void saveSearchHistory(Long userId, String keyword) {
-        SearchHistory existing = searchHistoryRepository.findByUserIdAndKeyword(userId, keyword);
-        if (existing != null) {
-            // Update search count
-            searchHistoryRepository.updateSearchCount(existing.getId(), existing.getSearchCount() + 1);
-        } else {
-            // Create new record
-            SearchHistory history = new SearchHistory();
-            history.setUserId(userId);
-            history.setKeyword(keyword);
-            history.setSearchCount(1);
-            searchHistoryRepository.save(history);
-        }
     }
 
     private SearchBookItemVo toSearchBookItemVo(BookInfo bookInfo) {
@@ -151,7 +100,7 @@ public class SearchAppService {
         vo.setBookId(bookInfo.getId());
         vo.setBookName(bookInfo.getName());
         vo.setAuthorName(bookInfo.getAuthor());
-        vo.setCategoryName(resolveCategoryName(bookInfo));
+        vo.setCategoryName(bookInfo.getName());
         vo.setCoverUrl(bookInfo.getCover());
         vo.setDescription(bookInfo.getDescription());
         vo.setStatus(bookInfo.getStatus());
@@ -164,16 +113,12 @@ public class SearchAppService {
         return vo;
     }
 
-    private RecommendBooksVo.RecommendBookItem toRecommendBookItem(BookInfo bookInfo) {
-        RecommendBooksVo.RecommendBookItem item = new RecommendBooksVo.RecommendBookItem();
+    private RecommendBookItemVo toRecommendBookItemVo(BookInfo bookInfo) {
+        RecommendBookItemVo item = new RecommendBookItemVo();
         item.setBookId(bookInfo.getId());
         item.setTitle(bookInfo.getName());
         item.setSubtitle(bookInfo.getAuthor());
         item.setCoverUrl(bookInfo.getCover());
         return item;
-    }
-
-    private String resolveCategoryName(BookInfo bookInfo) {
-        return "玄幻";
     }
 }

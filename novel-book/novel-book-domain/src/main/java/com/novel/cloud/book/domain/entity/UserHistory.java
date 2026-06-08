@@ -6,12 +6,9 @@ import java.time.LocalDateTime;
 
 /**
  * 用户阅读流水 - 领域实体（对齐 t_user_history 表）。
- * <p>与 {@link ReadingHistory} 的区别：
- * <ul>
- *   <li>{@code ReadingHistory}（t_reading_history）：一书一行，仅维护最新进度；</li>
- *   <li>{@code UserHistory}（t_user_history）：流水表，每次读取章节都新增一行，
- *       用于行为分析、最近 N 次阅读列表等场景。</li>
- * </ul>
+ * 与 ReadingHistory 的区别：
+ * ReadingHistory（t_reading_history）：一书一行，仅维护最新进度；
+ * UserHistory（t_user_history）：流水表，每次阅读章节新增一行，用于行为分析、最近N次阅读列表等场景。
  */
 @Data
 public class UserHistory {
@@ -20,7 +17,27 @@ public class UserHistory {
     private Long userId;
     private Long bookId;
     private Long chapterId;
-    /** 章节内阅读进度 0-100；start 时若是继续上次则继承，否则为 0 */
     private Integer progress;
     private LocalDateTime createTime;
+
+    /**
+     * 获取进度值
+     */
+    public Integer getProgressValue() {
+        return progress != null ? progress : 0;
+    }
+
+    /**
+     * 判断是否继续上次阅读（进度>0）
+     */
+    public boolean isContinuingPrevious() {
+        return progress != null && progress > 0;
+    }
+
+    /**
+     * 判断是否是首次开始阅读
+     */
+    public boolean isFirstTime() {
+        return progress == null || progress == 0;
+    }
 }

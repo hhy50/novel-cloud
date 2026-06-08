@@ -5,7 +5,7 @@ import lombok.Data;
 import java.time.LocalDateTime;
 
 /**
- * Chapter purchase domain entity
+ * 章节购买记录 - 领域实体
  */
 @Data
 public class ChapterPurchase {
@@ -16,4 +16,25 @@ public class ChapterPurchase {
     private Long chapterId;
     private Integer costCoins;
     private LocalDateTime createTime;
+
+    /**
+     * 获取花费金币数
+     */
+    public Integer getCostCoinsValue() {
+        return costCoins != null ? costCoins : 0;
+    }
+
+    /**
+     * 判断是否免费获得
+     */
+    public boolean isFree() {
+        return costCoins != null && costCoins == 0;
+    }
+
+    /**
+     * 判断是否是付费购买
+     */
+    public boolean isPaidPurchase() {
+        return costCoins != null && costCoins > 0;
+    }
 }

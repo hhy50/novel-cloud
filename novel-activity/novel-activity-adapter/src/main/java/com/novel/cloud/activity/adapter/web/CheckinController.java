@@ -8,7 +8,9 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 
 /**
- * 签到控制器
+ * 签到控制器（C 端）
+ * <p>业务异常统一抛 {@link com.novel.cloud.common.exception.BusinessException}，
+ * 由全局异常处理器映射为 {@code R.fail(code, message)}。</p>
  */
 @RestController
 @RequestMapping("/api/activity/checkin")
@@ -22,11 +24,7 @@ public class CheckinController {
      */
     @GetMapping("/status")
     public R<CheckinStatusVo> getCheckinStatus() {
-        try {
-            return R.ok(checkinAppService.getCheckinStatus());
-        } catch (Exception e) {
-            return R.fail(e.getMessage());
-        }
+        return R.ok(checkinAppService.getCheckinStatus());
     }
 
     /**
@@ -34,10 +32,6 @@ public class CheckinController {
      */
     @PostMapping("/perform")
     public R<CheckinResultVo> performCheckin() {
-        try {
-            return R.ok(checkinAppService.performCheckin());
-        } catch (Exception e) {
-            return R.fail(e.getMessage());
-        }
+        return R.ok(checkinAppService.performCheckin());
     }
 }

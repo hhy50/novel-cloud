@@ -24,7 +24,7 @@ public class BookChapterDO {
     private String title;
 
     /** 字数 */
-    private Integer wordscount;
+    private Integer wordsCount;
 
     /** 是否是VIP章节 */
     private Integer isVip;

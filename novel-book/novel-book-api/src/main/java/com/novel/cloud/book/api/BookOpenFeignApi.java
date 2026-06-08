@@ -1,7 +1,7 @@
 package com.novel.cloud.book.api;
 
-import com.novel.cloud.book.dto.BookDetailQueryDto;
-import com.novel.cloud.book.dto.BookDetailVo;
+import com.novel.cloud.book.dto.request.BookDetailQueryReq;
+import com.novel.cloud.book.dto.vo.BookDetailVo;
 import com.novel.cloud.common.domain.R;
 import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -11,5 +11,5 @@ import org.springframework.web.bind.annotation.RequestBody;
 public interface BookOpenFeignApi {
 
     @PostMapping("/detail")
-    R<BookDetailVo> getBookDetail(@RequestBody BookDetailQueryDto params);
+    R<BookDetailVo> getBookDetail(@RequestBody BookDetailQueryReq params);
 }

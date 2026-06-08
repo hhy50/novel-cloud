@@ -5,7 +5,7 @@ import lombok.Data;
 import java.time.LocalDateTime;
 
 /**
- * 书籍-分类关联
+ * 书籍-分类关联 - 领域实体
  */
 @Data
 public class BookCategory {
@@ -16,4 +16,11 @@ public class BookCategory {
     private LocalDateTime createTime;
     private LocalDateTime updateTime;
     private LocalDateTime deleteTime;
+
+    /**
+     * 判断是否有效
+     */
+    public boolean isValid() {
+        return deleteTime == null;
+    }
 }

@@ -35,7 +35,7 @@ public class BookChapterRepositoryImpl implements BookChapterRepository {
 
         List<BookChapterDO> chapterDOList = bookChapterMapper.selectList(wrapper);
         return chapterDOList.stream()
-                .map(this::toEntity)
+                .map(this::toDomainEntity)
                 .collect(Collectors.toList());
     }
 
@@ -45,7 +45,22 @@ public class BookChapterRepositoryImpl implements BookChapterRepository {
         if (chapterDO == null) {
             return null;
         }
-        return toEntity(chapterDO);
+        return toDomainEntity(chapterDO);
+    }
+
+    @Override
+    public List<BookChapter> findByNumberRange(Long bookId, Integer startNumber, Integer endNumber) {
+        LambdaQueryWrapper<BookChapterDO> wrapper = new LambdaQueryWrapper<BookChapterDO>()
+                .eq(BookChapterDO::getBookId, bookId)
+                .eq(BookChapterDO::getStatus, 1) // 只查询已发布的章节
+                .ge(BookChapterDO::getNumber, startNumber) // 大于等于起始序号
+                .le(BookChapterDO::getNumber, endNumber) // 小于等于结束序号
+                .orderByAsc(BookChapterDO::getNumber); // 按章节序号升序
+
+        List<BookChapterDO> chapterDOList = bookChapterMapper.selectList(wrapper);
+        return chapterDOList.stream()
+                .map(this::toDomainEntity)
+                .collect(Collectors.toList());
     }
 
     @Override
@@ -60,10 +75,25 @@ public class BookChapterRepositoryImpl implements BookChapterRepository {
         if (chapterDO == null) {
             return null;
         }
-        return toEntity(chapterDO);
+        return toDomainEntity(chapterDO);
     }
 
-    private BookChapter toEntity(BookChapterDO chapterDO) {
+    @Override
+    public BookChapter findMaxChapterByBookId(Long bookId) {
+        LambdaQueryWrapper<BookChapterDO> wrapper = new LambdaQueryWrapper<BookChapterDO>()
+                .eq(BookChapterDO::getBookId, bookId)
+                .eq(BookChapterDO::getStatus, 1) // 只查询已发布的章节
+                .orderByDesc(BookChapterDO::getNumber) // 按章节序号倒序
+                .last("LIMIT 1"); // 只取第一条
+
+        BookChapterDO chapterDO = bookChapterMapper.selectOne(wrapper);
+        if (chapterDO == null) {
+            return null;
+        }
+        return toDomainEntity(chapterDO);
+    }
+
+    private BookChapter toDomainEntity(BookChapterDO chapterDO) {
         BookChapter bookChapter = new BookChapter();
         BeanUtils.copyProperties(chapterDO, bookChapter);
         return bookChapter;

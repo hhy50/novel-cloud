@@ -5,7 +5,7 @@ import lombok.Data;
 import java.time.LocalDateTime;
 
 /**
- * Search history domain entity
+ * 搜索历史 - 领域实体
  */
 @Data
 public class SearchHistory {
@@ -16,4 +16,21 @@ public class SearchHistory {
     private Integer searchCount;
     private LocalDateTime createTime;
     private LocalDateTime updateTime;
+
+    /**
+     * 增加搜索次数
+     */
+    public void incrementSearchCount() {
+        if (searchCount == null) {
+            searchCount = 0;
+        }
+        searchCount++;
+    }
+
+    /**
+     * 获取搜索次数（默认0）
+     */
+    public Integer getSearchCountOrDefault() {
+        return searchCount != null ? searchCount : 0;
+    }
 }

@@ -10,6 +10,12 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
+/**
+ * 用户/钱包/任务 控制器。
+ *
+ * <p>签到接口已迁移至 {@code novel-activity} 模块：
+ * {@code GET/POST /api/activity/checkin/{status,perform}}，本控制器不再提供签到端点。</p>
+ */
 @Validated
 @RestController
 @RequiredArgsConstructor
@@ -38,16 +44,6 @@ public class UserController {
     @PostMapping("/coins/records")
     public R<CoinRecordsVo> getCoinRecords(@Valid @RequestBody CoinRecordsQueryDto params) {
         return R.ok(walletAppService.getCoinRecords(params));
-    }
-
-    @GetMapping("/checkin/status")
-    public R<CheckinStatusVo> getCheckinStatus() {
-        return R.ok(walletAppService.getCheckinStatus());
-    }
-
-    @PostMapping("/checkin")
-    public R<CheckinVo> checkin() {
-        return R.ok(walletAppService.performCheckin());
     }
 
     @GetMapping("/tasks/daily")

@@ -1,62 +1,34 @@
 package com.novel.cloud.book.app;
 
 import cn.dev33.satoken.stp.StpUtil;
-import com.novel.cloud.book.domain.entity.ChapterPurchase;
-import com.novel.cloud.book.domain.repository.ChapterPurchaseRepository;
-import com.novel.cloud.book.dto.PurchaseChapterDto;
-import com.novel.cloud.book.dto.PurchaseChapterVo;
+import com.novel.cloud.book.domain.service.ChapterPurchaseDomainService;
+import com.novel.cloud.book.dto.request.PurchaseChapterReq;
+import com.novel.cloud.book.dto.response.PurchaseChapterResp;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-/**
- * Chapter purchase application service
- */
 @Service
 @RequiredArgsConstructor
 public class ChapterPurchaseAppService {
 
-    private final ChapterPurchaseRepository chapterPurchaseRepository;
-    // TODO: inject UserWalletAppService when cross-module communication is set up
+    private final ChapterPurchaseDomainService chapterPurchaseDomainService;
 
     @Transactional
-    public PurchaseChapterVo purchaseChapter(PurchaseChapterDto params) {
+    public PurchaseChapterResp purchaseChapter(PurchaseChapterReq params) {
         Long userId = StpUtil.getLoginIdAsLong();
-        // Check if already purchased
-        ChapterPurchase existing = chapterPurchaseRepository.findByUserIdAndChapterId(
-                userId, params.getChapterId());
+        ChapterPurchaseDomainService.PurchaseResult result = chapterPurchaseDomainService.purchaseChapter(
+                userId, params.getBookId(), params.getChapterId());
 
-        if (existing != null) {
-            PurchaseChapterVo vo = new PurchaseChapterVo();
-            vo.setSuccess(true);
-            vo.setCostCoins(0);
-            vo.setMessage("Chapter already purchased");
-            return vo;
-        }
-
-        // TODO: Get chapter price from chapter repository
-        int chapterPrice = 10; // Default price
-
-        // TODO: Deduct coins from user wallet via cross-module call
-        // For now, just save the purchase record
-        ChapterPurchase purchase = new ChapterPurchase();
-        purchase.setUserId(userId);
-        purchase.setBookId(params.getBookId());
-        purchase.setChapterId(params.getChapterId());
-        purchase.setCostCoins(chapterPrice);
-        chapterPurchaseRepository.save(purchase);
-
-        PurchaseChapterVo vo = new PurchaseChapterVo();
-        vo.setSuccess(true);
-        vo.setCostCoins(chapterPrice);
-        vo.setRemainingCoins(0L); // TODO: get from wallet
-        vo.setMessage("Chapter purchased successfully");
+        PurchaseChapterResp vo = new PurchaseChapterResp();
+        vo.setSuccess(result.isSuccess());
+        vo.setCostCoins(result.getCostCoins());
+        vo.setMessage(result.getMessage());
+        vo.setRemainingCoins(0L);
         return vo;
     }
 
     public Boolean hasChapterAccess(Long userId, Long chapterId) {
-        ChapterPurchase purchase = chapterPurchaseRepository.findByUserIdAndChapterId(
-                userId, chapterId);
-        return purchase != null;
+        return chapterPurchaseDomainService.hasChapterAccess(userId, chapterId);
     }
 }

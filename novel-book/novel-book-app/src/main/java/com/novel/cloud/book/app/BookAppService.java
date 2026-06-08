@@ -1,93 +1,82 @@
 package com.novel.cloud.book.app;
 
-import com.novel.cloud.book.domain.entity.BookCategory;
 import com.novel.cloud.book.domain.entity.BookChapter;
 import com.novel.cloud.book.domain.entity.BookInfo;
 import com.novel.cloud.book.domain.entity.ChapterContent;
-import com.novel.cloud.book.domain.entity.ReadingHistory;
-import com.novel.cloud.book.domain.entity.StoreCategoryStyle;
-import com.novel.cloud.book.domain.entity.UserBookshelf;
-import com.novel.cloud.book.domain.repository.BookCategoryRepository;
-import com.novel.cloud.book.domain.repository.BookChapterRepository;
-import com.novel.cloud.book.domain.repository.BookInfoRepository;
-import com.novel.cloud.book.domain.repository.ChapterContentRepository;
-import com.novel.cloud.book.domain.repository.ReadingHistoryRepository;
-import com.novel.cloud.book.domain.repository.StoreCategoryStyleRepository;
-import com.novel.cloud.book.domain.repository.UserBookshelfRepository;
-import com.novel.cloud.book.dto.*;
+import com.novel.cloud.book.domain.service.BookDomainService;
+import com.novel.cloud.book.dto.request.*;
+import com.novel.cloud.book.dto.response.*;
+import com.novel.cloud.book.dto.vo.BookChapterVo;
+import com.novel.cloud.book.dto.vo.BookstoreBookVo;
+import com.novel.cloud.book.dto.vo.BookstoreSectionVo;
 import com.novel.cloud.common.util.MetadataContext;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
-import java.util.*;
+import java.util.List;
 import java.util.stream.Collectors;
 
-/**
- * 书籍应用服务
- * 职责：用例编排、事务控制，不写核心业务规则
- */
 @Service
 @RequiredArgsConstructor
 public class BookAppService {
 
-    private final BookInfoRepository bookInfoRepository;
-    private final StoreCategoryStyleRepository storeCategoryStyleRepository;
-    private final BookCategoryRepository bookCategoryRepository;
-    private final BookChapterRepository bookChapterRepository;
-    private final ChapterContentRepository chapterContentRepository;
-    private final ReadingHistoryRepository readingHistoryRepository;
-    private final UserBookshelfRepository userBookshelfRepository;
+    private final BookDomainService bookDomainService;
 
-    // ── 书城首页 ──────────────────────────────────────────────────
+    public BookstoreResp getBookstore(BookstoreQueryReq params) {
+        List<BookDomainService.BookstoreSection> sections = bookDomainService.getBookstore(
+                MetadataContext.getAppCode(),
+                MetadataContext.getLanguage());
 
-    /**
-     * 书城首页，从 t_store_category_style 驱动分类和样式，
-     * 通过 t_book_category 关联查询每个分类下的书籍。
-     * <p>
-     * 返回格式: {"sections": [{"style": 1, "title": "编辑推荐", "tags": [...], "books": [...]}]}
-     */
-    public BookstoreVo getBookstore(BookstoreQueryDto params) {
-        String appCode = MetadataContext.getAppCode();
-        if (appCode == null || appCode.isBlank()) {
-            appCode = "A1";
-        }
-        String language = MetadataContext.getLanguage();
-        if (language == null || language.isBlank()) {
-            language = "zh";
-        }
+        List<BookstoreSectionVo> sectionVos = sections.stream()
+                .map(this::toBookstoreSectionVo)
+                .collect(Collectors.toList());
 
-        // 1. 查询顶层分类
-        List<StoreCategoryStyle> rootCategories = storeCategoryStyleRepository
-                .findRootCategories(appCode, language);
-
-        List<BookstoreSectionVo> sections = new ArrayList<>();
-
-        for (StoreCategoryStyle category : rootCategories) {
-            BookstoreSectionVo section = new BookstoreSectionVo();
-            section.setStyle(category.getStyleCode());
-            section.setTitle(category.getName());
-
-            // 2. 通过 t_book_category 查出该分类下的 bookId 列表
-            List<Long> bookIds = bookCategoryRepository.findByCategoryId(category.getId())
-                    .stream()
-                    .map(BookCategory::getBookId)
-                    .collect(Collectors.toList());
-
-            // 3. 批量查询书籍信息
-            List<BookInfo> books = bookCategoryRepository.findBooksByIds(bookIds);
-
-            // 4. 转换成前端需要的 VO
-            List<BookstoreBookVo> bookVOs = books.stream()
-                    .map(this::toBookstoreBookVo)
-                    .collect(Collectors.toList());
-
-            section.setBooks(bookVOs);
-            sections.add(section);
-        }
-
-        BookstoreVo result = new BookstoreVo();
-        result.setSections(sections);
+        BookstoreResp result = new BookstoreResp();
+        result.setSections(sectionVos);
         return result;
+    }
+
+    public BookDetailResp getBookDetail(BookDetailQueryReq params) {
+        Long userId = MetadataContext.getUserId();
+        BookDomainService.BookDetailResult result = bookDomainService.getBookDetail(
+                params.getBookId(), userId);
+
+        if (result == null) {
+            return null;
+        }
+
+        return toBookDetailResp(result);
+    }
+
+    public BookChapterListResp getBookChapterList(BookChapterListQueryReq params) {
+        List<BookChapter> chapters = bookDomainService.getBookChapterList(params.getBookId(), params.getLength());
+
+        BookChapterListResp resp = new BookChapterListResp();
+        resp.setBookId(params.getBookId());
+        resp.setChapters(chapters.stream()
+                .map(this::toChapterVo)
+                .toList());
+        return resp;
+    }
+
+    public ChapterRangeResp getChapterRange(ChapterRangeQueryReq params) {
+        BookDomainService.ChapterRangeResult result = bookDomainService.getChapterRange(params.getBookId(), params.getChapterId(), params.getRangeSize());
+        if (result == null) {
+            return null;
+        }
+
+        return toChapterRangeResp(result);
+    }
+
+    private BookstoreSectionVo toBookstoreSectionVo(BookDomainService.BookstoreSection section) {
+        BookstoreSectionVo vo = new BookstoreSectionVo();
+        vo.setStyle(section.getStyle());
+        vo.setTitle(section.getTitle());
+        vo.setBooks(section.getBooks().stream()
+                .map(this::toBookstoreBookVo)
+                .collect(Collectors.toList()));
+        return vo;
     }
 
     private BookstoreBookVo toBookstoreBookVo(BookInfo book) {
@@ -106,20 +95,15 @@ public class BookAppService {
         return vo;
     }
 
-    // ── 书籍详情 ──────────────────────────────────────────────────
-
-    public BookDetailVo getBookDetail(BookDetailQueryDto params) {
-        BookInfo bookInfo = bookInfoRepository.findById(params.getBookId());
-        BookDetailVo detailVo = new BookDetailVo();
-        if (bookInfo == null) {
-            return null;
-        }
+    private BookDetailResp toBookDetailResp(BookDomainService.BookDetailResult result) {
+        BookInfo bookInfo = result.getBookInfo();
+        BookDetailResp detailVo = new BookDetailResp();
         detailVo.setBookId(bookInfo.getId());
         detailVo.setTitle(bookInfo.getName());
         detailVo.setAuthor(bookInfo.getAuthor());
         detailVo.setCoverUrl(bookInfo.getCover());
         detailVo.setDescription(bookInfo.getDescription());
-        detailVo.setFinished(bookInfo.getStatus() != null && bookInfo.getStatus() == 2);
+        detailVo.setFinished(bookInfo.isFinished());
         detailVo.setIsHot(bookInfo.getIsHot());
         detailVo.setIsNew(bookInfo.getIsNew());
         detailVo.setIsLimitedFree(bookInfo.getIsLimitedFree());
@@ -127,99 +111,56 @@ public class BookAppService {
         detailVo.setScore(bookInfo.getScore());
         detailVo.setLikes(bookInfo.getTotalFavors());
         detailVo.setViews(bookInfo.getTotalViews());
-        detailVo.setRating(bookInfo.getScore() != null ? bookInfo.getScore() / 2.0 : 0.0);
+        detailVo.setRating(bookInfo.getRating());
         detailVo.setTotalChapters(bookInfo.getTotalChapters());
+        detailVo.setInBookshelf(result.isInBookshelf());
 
-        // 查询最后阅读章节
-        Long userId = MetadataContext.getUserId();
-        ReadingHistory lastRead = readingHistoryRepository.findLastReadByUserIdAndBookId(userId, params.getBookId());
-        if (lastRead != null) {
-            detailVo.setLastReadChapterId(lastRead.getChapterId());
-            // 查询章节标题
-            BookChapter lastChapter = bookChapterRepository.findById(lastRead.getChapterId());
-            if (lastChapter != null) {
-                detailVo.setLastReadChapterTitle(lastChapter.getTitle());
-            }
+        if (result.getLastReadChapter() != null) {
+            detailVo.setLastReadChapterId(result.getLastReadChapter().getId());
+            detailVo.setLastReadChapterTitle(result.getLastReadChapter().getTitle());
         }
 
-        // 查询是否在书架中
-        UserBookshelf bookshelf = userBookshelfRepository.findByUserIdAndBookId(userId, params.getBookId());
-        detailVo.setInBookshelf(bookshelf != null);
-
-        List<BookChapter> chapters = bookChapterRepository.findByBookId(params.getBookId(), 7);
-        detailVo.setChapters(chapters.stream()
+        detailVo.setChapters(result.getChapters().stream()
                 .map(this::toChapterVo)
                 .toList());
-        ;
         return detailVo;
     }
 
-
-    public BookChapterListVo getBookChapterList(BookChapterListQueryDto params) {
-        // 从数据库查询章节列表
-        List<BookChapter> chapters = bookChapterRepository.findByBookId(params.getBookId(), params.getLength());
-
-        BookChapterListVo chapterListVo = new BookChapterListVo();
-        chapterListVo.setBookId(params.getBookId());
-        chapterListVo.setChapters(chapters.stream()
+    private ChapterRangeResp toChapterRangeResp(BookDomainService.ChapterRangeResult result) {
+        ChapterRangeResp resp = new ChapterRangeResp();
+        resp.setCurrentChapter(toChapterVo(result.getCurrentChapter()));
+        resp.setPreviousChapters(result.getPreviousChapters().stream()
                 .map(this::toChapterVo)
                 .toList());
-        return chapterListVo;
+        resp.setNextChapters(result.getNextChapters().stream()
+                .map(this::toChapterVo)
+                .toList());
+        resp.setTotalChapters(result.getTotalChapters());
+        return resp;
     }
 
-    public BookChapterVo getBookChapterContent(BookChapterContentQueryDto params) {
-        // 1) 元数据：n_book_chapter（全表，无分片）
-        BookChapter chapter = bookChapterRepository.findById(params.getChapterId());
-        if (chapter == null) {
-            return null;
-        }
-        // 路由完整性校验：DTO 传入的 bookId 必须与章节归属一致，
-        // 否则按错 bookId 路由会去 wrong shard 查空数据，索性提前阻断更直观。
-        if (chapter.getBookId() != null && !chapter.getBookId().equals(params.getBookId())) {
-            return null;
-        }
-
-        // 2) 正文：n_chapter_content_{bookId % 10}（分表）
-        ChapterContent content = chapterContentRepository
-                .findByBookIdAndChapterId(params.getBookId(), params.getChapterId());
-
-        return toChapterVoWithContent(chapter, content);
-    }
-
-    // ── 辅助方法 ──────────────────────────────────────────────────
-
-    /**
-     * 将 BookChapter 实体转换为 BookChapterVo (不含内容,用于章节列表)
-     */
     private BookChapterVo toChapterVo(BookChapter chapter) {
         BookChapterVo vo = new BookChapterVo();
         vo.setChapterId(chapter.getId());
         vo.setChapterTitle(chapter.getTitle());
-        vo.setIsVip(chapter.getIsVip() != null && chapter.getIsVip() == 1);
-        // 章节列表不返回内容
+        vo.setWordsCount(chapter.getWordsCount());
+        vo.setUnlockStatus(chapter.getUnlockStatus());
         return vo;
     }
 
-    /**
-     * 将 BookChapter 元数据 + ChapterContent 正文组装为 BookChapterVo（含 content）。
-     * 正文为 null 时（章节未上线 / 数据缺失）返回空字符串，保持响应结构稳定。
-     */
-    private BookChapterVo toChapterVoWithContent(BookChapter chapter, ChapterContent content) {
-        BookChapterVo vo = new BookChapterVo();
+    public ChapterContentResp getBookChapterContent(@Valid BookChapterContentQueryReq params) {
+        BookChapter chapter = bookDomainService.getChapterInfo(params.getBookId(), params.getChapterId());
+        if (chapter == null) {
+            return null;
+        }
+        ChapterContent content = bookDomainService.getChapterContent(params.getBookId(), params.getChapterId());
+
+        ChapterContentResp vo = new ChapterContentResp();
         vo.setChapterId(chapter.getId());
         vo.setChapterTitle(chapter.getTitle());
-        vo.setChapterName(chapter.getTitle());
-        vo.setIsVip(chapter.getIsVip() != null && chapter.getIsVip() == 1);
-        vo.setChapterOrder(chapter.getNumber());
-        vo.setUpdateTime(content != null ? content.getUpdateTime() : chapter.getUpdateTime());
-
-        if (content != null) {
-            vo.setContent(content.getContent());
-            vo.setWordCount(content.getWordscount() != null ? content.getWordscount() : chapter.getWordscount());
-        } else {
-            vo.setContent("");
-            vo.setWordCount(chapter.getWordscount());
-        }
+        vo.setWordsCount(chapter.getWordsCount());
+        vo.setUnlockStatus(chapter.getUnlockStatus());
+        vo.setContent(content.getContent());
         return vo;
     }
 }

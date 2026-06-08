@@ -5,6 +5,7 @@ import com.novel.cloud.activity.domain.entity.*;
 import com.novel.cloud.activity.domain.repository.*;
 import com.novel.cloud.activity.domain.service.CheckinDomainService;
 import com.novel.cloud.activity.dto.*;
+import com.novel.cloud.common.exception.BusinessException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -97,7 +98,7 @@ public class CheckinAppService {
         // 检查是否已签到
         UserCheckinRecord todayRecord = userCheckinRecordRepository.findByUserIdAndDate(userId, today);
         if (todayRecord != null) {
-            throw new RuntimeException("今天已经签到过了");
+            throw new BusinessException(2001, "今天已经签到过了");
         }
 
         // 获取配置
