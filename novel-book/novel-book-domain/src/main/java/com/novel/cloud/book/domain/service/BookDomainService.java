@@ -21,8 +21,6 @@ public class BookDomainService {
     private final ChapterContentRepository chapterContentRepository;
     private final StoreCategoryStyleRepository storeCategoryStyleRepository;
     private final BookCategoryRepository bookCategoryRepository;
-    private final ReadingHistoryRepository readingHistoryRepository;
-    private final UserBookshelfRepository userBookshelfRepository;
 
     @Data
     @Builder
@@ -34,19 +32,8 @@ public class BookDomainService {
 
     @Data
     @Builder
-    public static class BookDetailResult {
-        private BookInfo bookInfo;
-        private BookChapter lastReadChapter;
-        private boolean inBookshelf;
-        private List<BookChapter> chapters;
-    }
-
-    @Data
-    @Builder
     public static class ChapterRangeResult {
-        private BookChapter currentChapter;
-        private List<BookChapter> previousChapters;
-        private List<BookChapter> nextChapters;
+        private List<BookChapter> chapters;
         private Integer totalChapters;
     }
 
@@ -75,47 +62,21 @@ public class BookDomainService {
                 .collect(Collectors.toList());
     }
 
-    public BookDetailResult getBookDetail(Long bookId, Long userId) {
-        BookInfo bookInfo = bookInfoRepository.findById(bookId);
-        if (bookInfo == null) {
-            return null;
-        }
-
-        BookChapter lastReadChapter = null;
-        if (userId != null) {
-            ReadingHistory lastRead = readingHistoryRepository.findLastReadByUserIdAndBookId(userId, bookId);
-            if (lastRead != null) {
-                lastReadChapter = bookChapterRepository.findById(lastRead.getChapterId());
-            }
-        }
-
-        boolean inBookshelf = false;
-        if (userId != null) {
-            UserBookshelf bookshelf = userBookshelfRepository.findByUserIdAndBookId(userId, bookId);
-            inBookshelf = (bookshelf != null);
-        }
-
-        List<BookChapter> chapters = bookChapterRepository.findByBookId(bookId, 7);
-
-        return BookDetailResult.builder()
-                .bookInfo(bookInfo)
-                .lastReadChapter(lastReadChapter)
-                .inBookshelf(inBookshelf)
-                .chapters(chapters)
-                .build();
+    public BookInfo getBookDetail(Long bookId) {
+        return bookInfoRepository.findById(bookId);
     }
 
     public List<BookChapter> getBookChapterList(Long bookId, Integer limit) {
         List<BookChapter> chapters = bookChapterRepository.findByBookId(bookId, limit);
         for (BookChapter chapter : chapters) {
-            chapter.setUnlockStatus(chapter.getIsVip());
+            chapter.setUnlockStatus(chapter.getIsVip() == 1 ? 0 : 1);
         }
         return chapters;
     }
 
     public BookChapter getChapterInfo(Long bookId, Long chapterId) {
         BookChapter chapter = bookChapterRepository.findById(chapterId);
-        chapter.setUnlockStatus(chapter.getIsVip());
+        chapter.setUnlockStatus(chapter.getIsVip() == 1 ? 0 : 1);
         return chapter;
     }
 
@@ -127,36 +88,31 @@ public class BookDomainService {
     public ChapterRangeResult getChapterRange(Long bookId, Long chapterId, Integer rangeSize) {
         int effectiveRangeSize = (rangeSize != null && rangeSize >= 0) ? rangeSize : 20;
 
+        // 查询指定章节以确认存在且属于该书
         BookChapter currentChapter = bookChapterRepository.findById(chapterId);
-        if (currentChapter == null) {
+        if (currentChapter == null || !currentChapter.getBookId().equals(bookId)) {
             return null;
         }
 
-        if (currentChapter.getBookId() != null && !currentChapter.getBookId().equals(bookId)) {
-            return null;
-        }
-
+        // 计算查询范围（当前章节的上下n条）
         Integer currentNumber = currentChapter.getNumber();
         int startNumber = Math.max(1, currentNumber - effectiveRangeSize);
         int endNumber = currentNumber + effectiveRangeSize;
 
-        List<BookChapter> rangeChapters = bookChapterRepository.findByNumberRange(bookId, startNumber, endNumber);
+        // 直接查询范围内的所有章节（已按序号排序）
+        List<BookChapter> chapters = bookChapterRepository.findByNumberRange(bookId, startNumber, endNumber);
 
-        List<BookChapter> previousChapters = rangeChapters.stream()
-                .filter(chapter -> chapter.getNumber() < currentNumber)
-                .collect(Collectors.toList());
+        // 设置解锁状态
+        for (BookChapter chapter : chapters) {
+            chapter.setUnlockStatus(chapter.getIsVip() == 1 ? 0 : 1);
+        }
 
-        List<BookChapter> nextChapters = rangeChapters.stream()
-                .filter(chapter -> chapter.getNumber() > currentNumber)
-                .collect(Collectors.toList());
-
+        // 获取总章节数
         BookInfo bookInfo = bookInfoRepository.findById(bookId);
         Integer totalChapters = (bookInfo != null) ? bookInfo.getTotalChapters() : 0;
 
         return ChapterRangeResult.builder()
-                .currentChapter(currentChapter)
-                .previousChapters(previousChapters)
-                .nextChapters(nextChapters)
+                .chapters(chapters)
                 .totalChapters(totalChapters)
                 .build();
     }

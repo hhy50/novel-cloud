@@ -71,7 +71,4 @@ public class BookDetailVo implements Serializable {
 
     /** 最后阅读章节标题 */
     private String lastReadChapterTitle;
-
-    /** 是否在书架中 */
-    private Boolean inBookshelf;
 }

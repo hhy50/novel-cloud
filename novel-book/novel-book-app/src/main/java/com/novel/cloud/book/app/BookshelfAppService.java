@@ -4,8 +4,10 @@ import cn.dev33.satoken.stp.StpUtil;
 import com.novel.cloud.book.domain.entity.BookInfo;
 import com.novel.cloud.book.domain.service.BookshelfDomainService;
 import com.novel.cloud.book.dto.request.AddBookshelfReq;
+import com.novel.cloud.book.dto.request.CheckBookshelfReq;
 import com.novel.cloud.book.dto.request.RemoveBookshelfReq;
 import com.novel.cloud.book.dto.response.BookshelfResp;
+import com.novel.cloud.book.dto.response.CheckBookshelfResp;
 import com.novel.cloud.book.dto.vo.BookshelfItemVo;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -49,6 +51,12 @@ public class BookshelfAppService {
         Long userId = StpUtil.getLoginIdAsLong();
         bookshelfDomainService.removeFromBookshelf(userId, params.getBookId());
         return true;
+    }
+
+    public CheckBookshelfResp checkInBookshelf(CheckBookshelfReq params) {
+        Long userId = StpUtil.getLoginIdAsLong();
+        boolean inShelf = bookshelfDomainService.inShelf(userId, params.getBookId());
+        return new CheckBookshelfResp(params.getBookId(), inShelf);
     }
 
     private BookshelfItemVo toBookshelfItemVo(BookshelfDomainService.BookshelfItemResult item) {

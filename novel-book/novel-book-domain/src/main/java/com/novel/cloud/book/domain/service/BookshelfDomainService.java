@@ -17,7 +17,12 @@ import java.util.stream.Collectors;
 public class BookshelfDomainService {
 
     private final UserBookshelfRepository userBookshelfRepository;
+
     private final BookInfoRepository bookInfoRepository;
+
+    public boolean inShelf(Long userId, Long bookId) {
+        return userBookshelfRepository.findByUserIdAndBookId(userId, bookId) != null;
+    }
 
     @Data
     @Builder

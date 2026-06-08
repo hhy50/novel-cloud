@@ -1,28 +1,30 @@
 package com.novel.cloud.book.dto.response;
 
-import com.novel.cloud.book.dto.vo.BookChapterVo;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.io.Serial;
 import java.io.Serializable;
-import java.util.List;
 
 /**
- * 章节范围响应 - 直接返回章节列表
+ * 检查书籍是否在书架响应
  */
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class ChapterRangeResp implements Serializable {
+public class CheckBookshelfResp implements Serializable {
 
     @Serial
     private static final long serialVersionUID = 1L;
 
-    /** 章节列表 */
-    private List<BookChapterVo> chapters;
+    /**
+     * 书籍ID
+     */
+    private Long bookId;
 
-    /** 总章节数 */
-    private Integer totalChapters;
+    /**
+     * 是否在书架中
+     */
+    private Boolean inBookshelf;
 }

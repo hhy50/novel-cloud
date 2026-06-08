@@ -2,8 +2,10 @@ package com.novel.cloud.book.adapter.web;
 
 import com.novel.cloud.book.app.BookshelfAppService;
 import com.novel.cloud.book.dto.request.AddBookshelfReq;
+import com.novel.cloud.book.dto.request.CheckBookshelfReq;
 import com.novel.cloud.book.dto.request.RemoveBookshelfReq;
 import com.novel.cloud.book.dto.response.BookshelfResp;
+import com.novel.cloud.book.dto.response.CheckBookshelfResp;
 import com.novel.cloud.common.domain.R;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -37,5 +39,10 @@ public class BookshelfController {
     @PostMapping("/remove")
     public R<Boolean> removeFromBookshelf(@Valid @RequestBody RemoveBookshelfReq params) {
         return R.ok(bookshelfAppService.removeFromBookshelf(params));
+    }
+
+    @PostMapping("/check")
+    public R<CheckBookshelfResp> checkInBookshelf(@Valid @RequestBody CheckBookshelfReq params) {
+        return R.ok(bookshelfAppService.checkInBookshelf(params));
     }
 }

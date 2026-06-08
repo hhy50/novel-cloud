@@ -4,6 +4,7 @@ import com.novel.cloud.book.domain.entity.BookChapter;
 import com.novel.cloud.book.domain.entity.BookInfo;
 import com.novel.cloud.book.domain.entity.ChapterContent;
 import com.novel.cloud.book.domain.service.BookDomainService;
+import com.novel.cloud.book.domain.service.BookshelfDomainService;
 import com.novel.cloud.book.dto.request.*;
 import com.novel.cloud.book.dto.response.*;
 import com.novel.cloud.book.dto.vo.BookChapterVo;
@@ -39,14 +40,14 @@ public class BookAppService {
 
     public BookDetailResp getBookDetail(BookDetailQueryReq params) {
         Long userId = MetadataContext.getUserId();
-        BookDomainService.BookDetailResult result = bookDomainService.getBookDetail(
-                params.getBookId(), userId);
+        Long bookId = params.getBookId();
 
-        if (result == null) {
+        BookInfo bookInfo = bookDomainService.getBookDetail(bookId);
+        if (bookInfo == null) {
             return null;
         }
-
-        return toBookDetailResp(result);
+        List<BookChapter> bookChapterList = bookDomainService.getBookChapterList(bookId, 10);
+        return toBookDetailResp(bookInfo, bookChapterList);
     }
 
     public BookChapterListResp getBookChapterList(BookChapterListQueryReq params) {
@@ -61,12 +62,21 @@ public class BookAppService {
     }
 
     public ChapterRangeResp getChapterRange(ChapterRangeQueryReq params) {
-        BookDomainService.ChapterRangeResult result = bookDomainService.getChapterRange(params.getBookId(), params.getChapterId(), params.getRangeSize());
+        BookDomainService.ChapterRangeResult result = bookDomainService.getChapterRange(
+                params.getBookId(),
+                params.getChapterId(),
+                params.getRangeSize()
+        );
         if (result == null) {
             return null;
         }
 
-        return toChapterRangeResp(result);
+        // 直接转换章节列表
+        List<BookChapterVo> chapterVos = result.getChapters().stream()
+                .map(this::toChapterVo)
+                .toList();
+
+        return new ChapterRangeResp(chapterVos, result.getTotalChapters());
     }
 
     private BookstoreSectionVo toBookstoreSectionVo(BookDomainService.BookstoreSection section) {
@@ -95,8 +105,7 @@ public class BookAppService {
         return vo;
     }
 
-    private BookDetailResp toBookDetailResp(BookDomainService.BookDetailResult result) {
-        BookInfo bookInfo = result.getBookInfo();
+    private BookDetailResp toBookDetailResp(BookInfo bookInfo, List<BookChapter> chapters) {
         BookDetailResp detailVo = new BookDetailResp();
         detailVo.setBookId(bookInfo.getId());
         detailVo.setTitle(bookInfo.getName());
@@ -113,31 +122,12 @@ public class BookAppService {
         detailVo.setViews(bookInfo.getTotalViews());
         detailVo.setRating(bookInfo.getRating());
         detailVo.setTotalChapters(bookInfo.getTotalChapters());
-        detailVo.setInBookshelf(result.isInBookshelf());
-
-        if (result.getLastReadChapter() != null) {
-            detailVo.setLastReadChapterId(result.getLastReadChapter().getId());
-            detailVo.setLastReadChapterTitle(result.getLastReadChapter().getTitle());
-        }
-
-        detailVo.setChapters(result.getChapters().stream()
+        detailVo.setChapters(chapters.stream()
                 .map(this::toChapterVo)
                 .toList());
         return detailVo;
     }
 
-    private ChapterRangeResp toChapterRangeResp(BookDomainService.ChapterRangeResult result) {
-        ChapterRangeResp resp = new ChapterRangeResp();
-        resp.setCurrentChapter(toChapterVo(result.getCurrentChapter()));
-        resp.setPreviousChapters(result.getPreviousChapters().stream()
-                .map(this::toChapterVo)
-                .toList());
-        resp.setNextChapters(result.getNextChapters().stream()
-                .map(this::toChapterVo)
-                .toList());
-        resp.setTotalChapters(result.getTotalChapters());
-        return resp;
-    }
 
     private BookChapterVo toChapterVo(BookChapter chapter) {
         BookChapterVo vo = new BookChapterVo();
