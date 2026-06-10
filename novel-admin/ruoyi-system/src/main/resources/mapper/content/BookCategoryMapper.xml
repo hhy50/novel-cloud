@@ -1,0 +1,84 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ruoyi.system.mapper.BookCategoryMapper">
+
+    <resultMap type="BookCategory" id="BookCategoryResult">
+        <id     property="id"       column="id"       />
+        <result property="name"     column="name"     />
+        <result property="createBy" column="create_by" />
+        <result property="createTime" column="create_time" />
+        <result property="updateBy" column="update_by" />
+        <result property="updateTime" column="update_time" />
+        <result property="remark"   column="remark"   />
+    </resultMap>
+
+    <sql id="selectBookCategoryVo">
+        select id, name, create_by, create_time, update_by, update_time, remark from t_category
+    </sql>
+
+    <select id="selectBookCategoryList" parameterType="BookCategory" resultMap="BookCategoryResult">
+        <include refid="selectBookCategoryVo"/>
+        <where>
+            <if test="name != null and name != ''">
+                AND name like concat('%', #{name}, '%')
+            </if>
+            <if test="params.beginTime != null and params.beginTime != ''">
+                and date_format(create_time,'%Y%m%d') &gt;= date_format(#{params.beginTime},'%Y%m%d')
+            </if>
+            <if test="params.endTime != null and params.endTime != ''">
+                and date_format(create_time,'%Y%m%d') &lt;= date_format(#{params.endTime},'%Y%m%d')
+            </if>
+        </where>
+    </select>
+
+    <select id="selectBookCategoryById" parameterType="Long" resultMap="BookCategoryResult">
+        <include refid="selectBookCategoryVo"/>
+        where id = #{id}
+    </select>
+
+    <select id="checkCategoryNameUnique" parameterType="String" resultMap="BookCategoryResult">
+        <include refid="selectBookCategoryVo"/>
+        where name = #{name} limit 1
+    </select>
+
+    <insert id="insertBookCategory" parameterType="BookCategory" useGeneratedKeys="true" keyProperty="id">
+        insert into t_category
+        <trim prefix="(" suffix=")" suffixOverrides=",">
+            <if test="name != null and name != ''">name,</if>
+            <if test="createBy != null and createBy != ''">create_by,</if>
+            <if test="remark != null">remark,</if>
+            create_time
+        </trim>
+        <trim prefix="values (" suffix=")" suffixOverrides=",">
+            <if test="name != null and name != ''">#{name},</if>
+            <if test="createBy != null and createBy != ''">#{createBy},</if>
+            <if test="remark != null">#{remark},</if>
+            sysdate()
+        </trim>
+    </insert>
+
+    <update id="updateBookCategory" parameterType="BookCategory">
+        update t_category
+        <trim prefix="SET" suffixOverrides=",">
+            <if test="name != null and name != ''">name = #{name},</if>
+            <if test="updateBy != null and updateBy != ''">update_by = #{updateBy},</if>
+            <if test="remark != null">remark = #{remark},</if>
+            update_time = sysdate()
+        </trim>
+        where id = #{id}
+    </update>
+
+    <delete id="deleteBookCategoryById" parameterType="Long">
+        delete from t_category where id = #{id}
+    </delete>
+
+    <delete id="deleteBookCategoryByIds" parameterType="Long[]">
+        delete from t_category where id in
+        <foreach item="id" collection="array" open="(" separator="," close=")">
+            #{id}
+        </foreach>
+    </delete>
+
+</mapper>

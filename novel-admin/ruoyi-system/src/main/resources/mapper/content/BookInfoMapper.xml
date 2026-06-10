@@ -1,0 +1,207 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ruoyi.system.mapper.BookInfoMapper">
+
+    <resultMap type="BookInfo" id="BookInfoResult">
+        <id     property="id"              column="id"              />
+        <result property="language"        column="language"        />
+        <result property="name"            column="name"            />
+        <result property="author"          column="author"          />
+        <result property="description"     column="description"     />
+        <result property="totalPrice"      column="total_price"     />
+        <result property="wordsPrice"      column="words_price"     />
+        <result property="chapterPrice"    column="chapter_price"   />
+        <result property="freeChapters"    column="free_chapters"   />
+        <result property="cover"           column="cover"           />
+        <result property="status"          column="status"          />
+        <result property="onlineStatus"    column="online_status"   />
+        <result property="isBaoyue"        column="is_baoyue"       />
+        <result property="isHot"           column="is_hot"          />
+        <result property="isNew"           column="is_new"          />
+        <result property="isLimitedFree"   column="is_limited_free" />
+        <result property="isGreatest"      column="is_greatest"     />
+        <result property="isGod"           column="is_god"          />
+        <result property="totalWords"      column="total_words"     />
+        <result property="totalChapters"   column="total_chapters"  />
+        <result property="totalViews"      column="total_views"     />
+        <result property="totalFavors"     column="total_favors"    />
+        <result property="score"           column="score"           />
+        <result property="categoryId"      column="category_id"     />
+        <result property="categoryName"    column="category_name"   />
+        <result property="createBy"        column="create_by"       />
+        <result property="createTime"      column="create_time"     />
+        <result property="updateBy"        column="update_by"       />
+        <result property="updateTime"      column="update_time"     />
+        <result property="remark"          column="remark"          />
+    </resultMap>
+
+    <sql id="selectBookInfoVo">
+        select b.id, b.language, b.name, b.author, b.description, b.total_price, b.words_price,
+               b.chapter_price, b.free_chapters, b.cover, b.status, b.online_status, b.is_baoyue,
+               b.is_hot, b.is_new, b.is_limited_free, b.is_greatest, b.is_god, b.total_words,
+               b.total_chapters, b.total_views, b.total_favors, b.score, b.create_by, b.create_time,
+               b.update_by, b.update_time, b.remark, c.name as category_name
+        from t_book_info b
+        left join t_book_category bc on b.id = bc.book_id
+        left join t_category c on bc.category_id = c.id
+    </sql>
+
+    <select id="selectBookInfoList" parameterType="BookInfo" resultMap="BookInfoResult">
+        select distinct b.id, b.language, b.name, b.author, b.description, b.total_price, b.words_price,
+               b.chapter_price, b.free_chapters, b.cover, b.status, b.online_status, b.is_baoyue,
+               b.is_hot, b.is_new, b.is_limited_free, b.is_greatest, b.is_god, b.total_words,
+               b.total_chapters, b.total_views, b.total_favors, b.score, b.create_by, b.create_time,
+               b.update_by, b.update_time, b.remark, c.name as category_name
+        from t_book_info b
+        left join t_book_category bc on b.id = bc.book_id
+        left join t_category c on bc.category_id = c.id
+        <where>
+            b.deleted_at is null
+            <if test="name != null and name != ''">
+                AND b.name like concat('%', #{name}, '%')
+            </if>
+            <if test="author != null and author != ''">
+                AND b.author like concat('%', #{author}, '%')
+            </if>
+            <if test="status != null">
+                AND b.status = #{status}
+            </if>
+            <if test="onlineStatus != null">
+                AND b.online_status = #{onlineStatus}
+            </if>
+            <if test="categoryId != null">
+                AND bc.category_id = #{categoryId}
+            </if>
+            <if test="params.beginTime != null and params.beginTime != ''">
+                and date_format(b.create_time,'%Y%m%d') &gt;= date_format(#{params.beginTime},'%Y%m%d')
+            </if>
+            <if test="params.endTime != null and params.endTime != ''">
+                and date_format(b.create_time,'%Y%m%d') &lt;= date_format(#{params.endTime},'%Y%m%d')
+            </if>
+        </where>
+        order by b.id desc
+    </select>
+
+    <select id="selectBookInfoById" parameterType="Long" resultMap="BookInfoResult">
+        select b.id, b.language, b.name, b.author, b.description, b.total_price, b.words_price,
+               b.chapter_price, b.free_chapters, b.cover, b.status, b.online_status, b.is_baoyue,
+               b.is_hot, b.is_new, b.is_limited_free, b.is_greatest, b.is_god, b.total_words,
+               b.total_chapters, b.total_views, b.total_favors, b.score, b.create_by, b.create_time,
+               b.update_by, b.update_time, b.remark,
+               group_concat(c.name separator ',') as category_name
+        from t_book_info b
+        left join t_book_category bc on b.id = bc.book_id
+        left join t_category c on bc.category_id = c.id
+        where b.id = #{id} and b.deleted_at is null
+        group by b.id
+    </select>
+
+    <select id="checkBookNameUnique" parameterType="String" resultMap="BookInfoResult">
+        <include refid="selectBookInfoVo"/>
+        where b.name = #{name} and b.deleted_at is null limit 1
+    </select>
+
+    <insert id="insertBookInfo" parameterType="BookInfo" useGeneratedKeys="true" keyProperty="id">
+        insert into t_book_info
+        <trim prefix="(" suffix=")" suffixOverrides=",">
+            <if test="language != null">language,</if>
+            <if test="name != null and name != ''">name,</if>
+            <if test="author != null and author != ''">author,</if>
+            <if test="description != null">description,</if>
+            <if test="totalPrice != null">total_price,</if>
+            <if test="wordsPrice != null">words_price,</if>
+            <if test="chapterPrice != null">chapter_price,</if>
+            <if test="freeChapters != null">free_chapters,</if>
+            <if test="cover != null">cover,</if>
+            <if test="status != null">status,</if>
+            <if test="onlineStatus != null">online_status,</if>
+            <if test="isBaoyue != null">is_baoyue,</if>
+            <if test="isHot != null">is_hot,</if>
+            <if test="isNew != null">is_new,</if>
+            <if test="isLimitedFree != null">is_limited_free,</if>
+            <if test="isGreatest != null">is_greatest,</if>
+            <if test="isGod != null">is_god,</if>
+            <if test="totalWords != null">total_words,</if>
+            <if test="totalChapters != null">total_chapters,</if>
+            <if test="totalViews != null">total_views,</if>
+            <if test="totalFavors != null">total_favors,</if>
+            <if test="score != null">score,</if>
+            <if test="createBy != null and createBy != ''">create_by,</if>
+            <if test="remark != null">remark,</if>
+            created_at, updated_at, create_time
+        </trim>
+        <trim prefix="values (" suffix=")" suffixOverrides=",">
+            <if test="language != null">#{language},</if>
+            <if test="name != null and name != ''">#{name},</if>
+            <if test="author != null and author != ''">#{author},</if>
+            <if test="description != null">#{description},</if>
+            <if test="totalPrice != null">#{totalPrice},</if>
+            <if test="wordsPrice != null">#{wordsPrice},</if>
+            <if test="chapterPrice != null">#{chapterPrice},</if>
+            <if test="freeChapters != null">#{freeChapters},</if>
+            <if test="cover != null">#{cover},</if>
+            <if test="status != null">#{status},</if>
+            <if test="onlineStatus != null">#{onlineStatus},</if>
+            <if test="isBaoyue != null">#{isBaoyue},</if>
+            <if test="isHot != null">#{isHot},</if>
+            <if test="isNew != null">#{isNew},</if>
+            <if test="isLimitedFree != null">#{isLimitedFree},</if>
+            <if test="isGreatest != null">#{isGreatest},</if>
+            <if test="isGod != null">#{isGod},</if>
+            <if test="totalWords != null">#{totalWords},</if>
+            <if test="totalChapters != null">#{totalChapters},</if>
+            <if test="totalViews != null">#{totalViews},</if>
+            <if test="totalFavors != null">#{totalFavors},</if>
+            <if test="score != null">#{score},</if>
+            <if test="createBy != null and createBy != ''">#{createBy},</if>
+            <if test="remark != null">#{remark},</if>
+            unix_timestamp(now()), unix_timestamp(now()), sysdate()
+        </trim>
+    </insert>
+
+    <update id="updateBookInfo" parameterType="BookInfo">
+        update t_book_info
+        <trim prefix="SET" suffixOverrides=",">
+            <if test="language != null">language = #{language},</if>
+            <if test="name != null and name != ''">name = #{name},</if>
+            <if test="author != null and author != ''">author = #{author},</if>
+            <if test="description != null">description = #{description},</if>
+            <if test="totalPrice != null">total_price = #{totalPrice},</if>
+            <if test="wordsPrice != null">words_price = #{wordsPrice},</if>
+            <if test="chapterPrice != null">chapter_price = #{chapterPrice},</if>
+            <if test="freeChapters != null">free_chapters = #{freeChapters},</if>
+            <if test="cover != null">cover = #{cover},</if>
+            <if test="status != null">status = #{status},</if>
+            <if test="onlineStatus != null">online_status = #{onlineStatus},</if>
+            <if test="isBaoyue != null">is_baoyue = #{isBaoyue},</if>
+            <if test="isHot != null">is_hot = #{isHot},</if>
+            <if test="isNew != null">is_new = #{isNew},</if>
+            <if test="isLimitedFree != null">is_limited_free = #{isLimitedFree},</if>
+            <if test="isGreatest != null">is_greatest = #{isGreatest},</if>
+            <if test="isGod != null">is_god = #{isGod},</if>
+            <if test="totalWords != null">total_words = #{totalWords},</if>
+            <if test="totalChapters != null">total_chapters = #{totalChapters},</if>
+            <if test="totalViews != null">total_views = #{totalViews},</if>
+            <if test="totalFavors != null">total_favors = #{totalFavors},</if>
+            <if test="score != null">score = #{score},</if>
+            <if test="updateBy != null and updateBy != ''">update_by = #{updateBy},</if>
+            <if test="remark != null">remark = #{remark},</if>
+            updated_at = unix_timestamp(now()), update_time = sysdate()
+        </trim>
+        where id = #{id} and deleted_at is null
+    </update>
+
+    <update id="deleteBookInfoById" parameterType="Long">
+        update t_book_info set deleted_at = unix_timestamp(now()) where id = #{id}
+    </update>
+
+    <update id="deleteBookInfoByIds" parameterType="Long[]">
+        update t_book_info set deleted_at = unix_timestamp(now()) where id in
+        <foreach item="id" collection="array" open="(" separator="," close=")">
+            #{id}
+        </foreach>
+    </update>
+
+</mapper>

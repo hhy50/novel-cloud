@@ -12,37 +12,39 @@ spring:
     active: dev
   cloud:
     gateway:
-      routes:
-        - id: novel-user-service
-          uri: lb://novel-user-service
-          predicates:
-            - Path=/api/user/**
-          filters:
-            - StripPrefix=0
-        - id: novel-book-service
-          uri: lb://novel-book-service
-          predicates:
-            - Path=/api/book/**
-          filters:
-            - StripPrefix=0
-        - id: novel-subscribe-service
-          uri: lb://novel-subscribe-service
-          predicates:
-            - Path=/api/subscribe/**
-          filters:
-            - StripPrefix=0
-        - id: novel-payment-service
-          uri: lb://novel-payment-service
-          predicates:
-            - Path=/api/payment/**
-          filters:
-            - StripPrefix=0
-        - id: novel-activity-service
-          uri: lb://novel-activity
-          predicates:
-            - Path=/api/activity/**
-          filters:
-            - StripPrefix=0
+      server:
+        webflux:
+          routes:
+            - id: novel-user-service
+              uri: lb://novel-user-service
+              predicates:
+                - Path=/api/user/**
+              filters:
+                - StripPrefix=0
+            - id: novel-book-service
+              uri: lb://novel-book-service
+              predicates:
+                - Path=/api/book/**
+              filters:
+                - StripPrefix=0
+            - id: novel-subscribe-service
+              uri: lb://novel-subscribe-service
+              predicates:
+                - Path=/api/subscribe/**
+              filters:
+                - StripPrefix=0
+            - id: novel-payment-service
+              uri: lb://novel-payment-service
+              predicates:
+                - Path=/api/payment/**
+              filters:
+                - StripPrefix=0
+            - id: novel-activity-service
+              uri: lb://novel-activity
+              predicates:
+                - Path=/api/activity/**
+              filters:
+                - StripPrefix=0
 
 logging:
   pattern:
