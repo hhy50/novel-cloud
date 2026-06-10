@@ -13,6 +13,7 @@
 
     <modules>
         <module>commons</module>
+        <module>novel-admin</module>
         <module>novel-user</module>
         <module>novel-book</module>
         <module>novel-subscribe</module>

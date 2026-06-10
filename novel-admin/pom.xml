@@ -66,24 +66,11 @@
                 <version>${sa-token.version}</version>
             </dependency>
 
-            <!-- Sa-Token 整合 Redis（使用jackson序列化） -->
-            <dependency>
-                <groupId>cn.dev33</groupId>
-                <artifactId>sa-token-redis-jackson</artifactId>
-                <version>${sa-token.version}</version>
-            </dependency>
-
             <!-- Sa-Token 整合 Thymeleaf -->
             <dependency>
                 <groupId>cn.dev33</groupId>
                 <artifactId>sa-token-dialect-thymeleaf</artifactId>
                 <version>${sa-token.version}</version>
-            </dependency>
-
-            <!-- Redis -->
-            <dependency>
-                <groupId>org.springframework.boot</groupId>
-                <artifactId>spring-boot-starter-data-redis</artifactId>
             </dependency>
 
             <!-- mybatis依赖 -->
@@ -207,7 +194,7 @@
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-compiler-plugin</artifactId>
-                <version>3.13.0</version>
+                <version>3.11.0</version>
                 <configuration>
                     <parameters>true</parameters>
                     <source>${java.version}</source>

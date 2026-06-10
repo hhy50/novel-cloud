@@ -18,7 +18,5 @@ sa-token:
   is-read-cookie: true
   # 是否从 head 中读取 token
   is-read-header: true
-  # token前缀
-  token-prefix: Bearer
   # 是否在初始化配置时打印版本字符画
   is-print: false

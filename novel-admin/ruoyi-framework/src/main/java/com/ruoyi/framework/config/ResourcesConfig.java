@@ -22,7 +22,7 @@ public class ResourcesConfig implements WebMvcConfigurer
     /**
      * 首页地址
      */
-    @Value("${shiro.user.indexUrl}")
+    @Value("${ruoyi-user.indexUrl}")
     private String indexUrl;
 
     @Autowired

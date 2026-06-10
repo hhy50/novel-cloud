@@ -30,7 +30,7 @@ public class SysLoginController extends BaseController
     /**
      * 是否开启记住我功能
      */
-    @Value("${shiro.rememberMe.enabled: false}")
+    @Value("${ruoyi-user.rememberMe.enabled: false}")
     private boolean rememberMe;
 
     @Autowired
@@ -62,13 +62,13 @@ public class SysLoginController extends BaseController
         {
             // 使用Sa-Token登录
             SysUser user = loginService.login(username, password);
-            
+
             // 登录成功，使用Sa-Token记录登录状态
             StpUtil.login(user.getUserId());
-            
+
             // 缓存用户信息到Session
             StpUtil.getSession().set("user", user);
-            
+
             return success();
         }
         catch (Exception e)
