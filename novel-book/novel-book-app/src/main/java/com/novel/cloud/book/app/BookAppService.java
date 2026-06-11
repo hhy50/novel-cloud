@@ -133,6 +133,7 @@ public class BookAppService {
         BookChapterVo vo = new BookChapterVo();
         vo.setChapterId(chapter.getId());
         vo.setChapterTitle(chapter.getTitle());
+        vo.setChapterNumber(chapter.getNumber());
         vo.setWordsCount(chapter.getWordsCount());
         vo.setUnlockStatus(chapter.getUnlockStatus());
         return vo;
@@ -148,6 +149,7 @@ public class BookAppService {
         ChapterContentResp vo = new ChapterContentResp();
         vo.setChapterId(chapter.getId());
         vo.setChapterTitle(chapter.getTitle());
+        vo.setChapterNumber(chapter.getNumber());
         vo.setWordsCount(chapter.getWordsCount());
         vo.setUnlockStatus(chapter.getUnlockStatus());
         vo.setContent(content.getContent());

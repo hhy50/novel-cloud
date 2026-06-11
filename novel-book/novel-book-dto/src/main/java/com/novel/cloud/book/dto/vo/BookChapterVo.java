@@ -23,9 +23,14 @@ public class BookChapterVo implements Serializable {
     private Long chapterId;
 
     /**
-     * 章节
+     * 章节标题
      */
     private String chapterTitle;
+
+    /**
+     * 章节序号
+     */
+    private Integer chapterNumber;
 
     /**
      * 字数
