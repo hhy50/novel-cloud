@@ -20,7 +20,4 @@ public class RecordReadingReq implements Serializable {
 
     @NotNull(message = "chapterId cannot be null")
     private Long chapterId;
-
-    private Integer progress;
-    private Integer duration;
 }

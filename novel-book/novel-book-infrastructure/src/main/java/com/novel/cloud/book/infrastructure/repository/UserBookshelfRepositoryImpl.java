@@ -73,7 +73,11 @@ public class UserBookshelfRepositoryImpl implements UserBookshelfRepository {
     }
 
     @Override
-    public void addOrUpdate(Long userId, Long bookId, Long chapterId) {
-        userBookshelfMapper.upsert(userId, bookId, chapterId);
+    public UserBookshelf addOrUpdate(Long userId, Long bookId) {
+        UserBookshelfDO bookshelfDO = userBookshelfMapper.upsert(userId, bookId);
+
+        UserBookshelf bookshelf = new UserBookshelf();
+        BeanUtils.copyProperties(bookshelfDO, bookshelf);
+        return bookshelf;
     }
 }

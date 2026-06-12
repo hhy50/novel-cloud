@@ -22,4 +22,5 @@ public class StartReadingReq implements Serializable {
 
     /** 可选：前端已确定要读的章节 ID，传则尊重 */
     private Long chapterId;
+
 }

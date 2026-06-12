@@ -1,9 +1,12 @@
 package com.novel.cloud.book.infrastructure.mapper;
 
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 import com.novel.cloud.book.infrastructure.dataobject.UserBookshelfDO;
 import org.apache.ibatis.annotations.Param;
 import org.apache.ibatis.annotations.Update;
+
+import java.time.LocalDateTime;
 
 public interface UserBookshelfMapper extends BaseMapper<UserBookshelfDO> {
 
@@ -11,15 +14,27 @@ public interface UserBookshelfMapper extends BaseMapper<UserBookshelfDO> {
     void updateLastRead(@Param("userId") Long userId, @Param("bookId") Long bookId, @Param("chapterId") Long chapterId);
 
     /**
-     * 隐式加入书架：依赖 uk_user_book 唯一索引做 upsert，
-     * 已存在则刷新 last_chapter_id / last_read_time / update_time。
-     * 一条 SQL 完成，避免应用层 "查→插→重试" 的竞态。
+     * 加入书架：先查询，存在则更新，不存在则插入
      */
-    @org.apache.ibatis.annotations.Insert(
-            "INSERT INTO t_user_bookshelf (user_id, book_id, last_chapter_id, last_read_time, create_time, update_time) " +
-                    "VALUES (#{userId}, #{bookId}, #{chapterId}, NOW(), NOW(), NOW()) " +
-                    "ON DUPLICATE KEY UPDATE last_chapter_id = VALUES(last_chapter_id), " +
-                    "last_read_time = NOW(), update_time = NOW()"
-    )
-    void upsert(@Param("userId") Long userId, @Param("bookId") Long bookId, @Param("chapterId") Long chapterId);
+    default UserBookshelfDO upsert(@Param("userId") Long userId, @Param("bookId") Long bookId) {
+        UserBookshelfDO shelfDo = selectOne(new LambdaQueryWrapper<UserBookshelfDO>()
+                .eq(UserBookshelfDO::getUserId, userId)
+                .eq(UserBookshelfDO::getBookId, bookId));
+
+        LocalDateTime now = LocalDateTime.now();
+        if (shelfDo != null) {
+            shelfDo.setLastReadTime(now);
+            shelfDo.setUpdateTime(now);
+            updateById(shelfDo);
+        } else {
+            shelfDo = new UserBookshelfDO();
+            shelfDo.setUserId(userId);
+            shelfDo.setBookId(bookId);
+            shelfDo.setLastReadTime(now);
+            shelfDo.setCreateTime(now);
+            shelfDo.setUpdateTime(now);
+            insert(shelfDo);
+        }
+        return shelfDo;
+    }
 }

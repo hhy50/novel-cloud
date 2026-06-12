@@ -4,7 +4,6 @@ import com.novel.cloud.book.domain.entity.BookChapter;
 import com.novel.cloud.book.domain.entity.BookInfo;
 import com.novel.cloud.book.domain.entity.ChapterContent;
 import com.novel.cloud.book.domain.service.BookDomainService;
-import com.novel.cloud.book.domain.service.BookshelfDomainService;
 import com.novel.cloud.book.dto.request.*;
 import com.novel.cloud.book.dto.response.*;
 import com.novel.cloud.book.dto.vo.BookChapterVo;
@@ -57,7 +56,7 @@ public class BookAppService {
         BookInfo bookInfo = bookDomainService.getBookDetail(params.getBookId());
         BookChapterListResp resp = new BookChapterListResp();
         resp.setBookId(params.getBookId());
-        resp.setTotal(totalChapters);
+        resp.setTotal(bookInfo.getTotalChapters().longValue());
         resp.setChapters(chapters.stream()
                 .map(this::toChapterVo)
                 .toList());
