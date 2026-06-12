@@ -52,9 +52,12 @@ public class BookAppService {
 
     public BookChapterListResp getBookChapterList(BookChapterListQueryReq params) {
         List<BookChapter> chapters = bookDomainService.getBookChapterList(params.getBookId(), params.getLength());
-
+        
+        // 获取书籍信息以获取总章节数
+        BookInfo bookInfo = bookDomainService.getBookDetail(params.getBookId());
         BookChapterListResp resp = new BookChapterListResp();
         resp.setBookId(params.getBookId());
+        resp.setTotal(totalChapters);
         resp.setChapters(chapters.stream()
                 .map(this::toChapterVo)
                 .toList());

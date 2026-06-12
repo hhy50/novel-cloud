@@ -16,7 +16,18 @@ public class BookChapterListResp implements Serializable {
     @Serial
     private static final long serialVersionUID = 1L;
 
+    /**
+     * 书籍ID
+     */
     private Long bookId;
 
+    /**
+     * 总章节数（用于分页）
+     */
+    private Long total;
+
+    /**
+     * 章节列表
+     */
     private List<BookChapterVo> chapters;
 }

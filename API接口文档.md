@@ -476,30 +476,34 @@ Authorization: {token}
 **请求头**：
 ```
 Authorization: {token}  （可选，未登录用户也可上报）
+deviceId: {设备ID}  （可选，优先使用Header中的deviceId）
 ```
 
 **请求参数**：
 
 | 字段 | 类型 | 必填 | 说明 |
 |------|------|------|------|
-| eventType | String | 是 | 事件类型 |
-| eventData | Object | 否 | 事件数据（JSON） |
-| deviceId | String | 是 | 设备ID |
+| event | String | 是 | 事件类型 |
+| eventData | String | 否 | 事件数据（JSON字符串） |
+| timestamp | Long | 是 | 时间戳（毫秒） |
+| deviceId | String | 否 | 设备ID（可选，优先使用Header） |
 | appVersion | String | 否 | 应用版本 |
 
 **请求示例**：
 
 ```json
 {
-  "eventType": "page_view",
-  "eventData": {
-    "pageName": "bookDetail",
-    "bookId": 123
-  },
-  "deviceId": "android-device-001",
+  "event": "page_view",
+  "eventData": "{\"pageName\":\"bookDetail\",\"bookId\":123}",
+  "timestamp": 1234567890123,
   "appVersion": "1.0.0"
 }
 ```
+
+**注意**：
+- `event` 字段（不是 `eventType`）
+- `deviceId` 优先从Header获取，如果Header没有则使用body中的deviceId
+- `eventData` 是JSON字符串格式
 
 **响应参数**：无
 
@@ -583,16 +587,14 @@ Authorization: {token}  （可选，未登录用户也可上报）
 | 字段 | 类型 | 必填 | 说明 |
 |------|------|------|------|
 | bookId | Long | 是 | 书籍ID |
-| pageNum | Integer | 否 | 页码，默认1 |
-| pageSize | Integer | 否 | 每页条数，默认100 |
+| length | Integer | 否 | 返回章节数量，默认100 |
 
 **请求示例**：
 
 ```json
 {
   "bookId": 123,
-  "pageNum": 1,
-  "pageSize": 100
+  "length": 100
 }
 ```
 
@@ -600,14 +602,15 @@ Authorization: {token}  （可选，未登录用户也可上报）
 
 | 字段 | 类型 | 说明 |
 |------|------|------|
+| bookId | Long | 书籍ID |
 | total | Long | 总章节数 |
 | chapters | Array | 章节列表 |
 | chapters[].chapterId | Long | 章节ID |
-| chapters[].chapterName | String | 章节名称 |
-| chapters[].chapterOrder | Integer | 章节序号 |
-| chapters[].isFree | Boolean | 是否免费 |
-| chapters[].coinPrice | Long | 金币价格 |
-| chapters[].purchased | Boolean | 是否已购买 |
+| chapters[].chapterTitle | String | 章节标题 |
+| chapters[].chapterNumber | Integer | 章节序号 |
+| chapters[].wordsCount | Integer | 字数 |
+| chapters[].unlockStatus | Integer | 解锁状态：0-未解锁 1-已解锁 |
+| chapters[].updateTime | String | 更新时间 |
 
 **响应示例**：
 
@@ -616,20 +619,24 @@ Authorization: {token}  （可选，未登录用户也可上报）
   "code": 0,
   "message": "success",
   "data": {
+    "bookId": 123,
     "total": 1500,
     "chapters": [
       {
         "chapterId": 1001,
-        "chapterName": "第一章 落魄少年",
-        "chapterOrder": 1,
-        "isFree": true,
-        "coinPrice": 0,
-        "purchased": true
+        "chapterTitle": "第一章 落魄少年",
+        "chapterNumber": 1,
+        "wordsCount": 3200,
+        "unlockStatus": 1,
+        "updateTime": "2026-06-01 10:00:00"
       }
     ]
   }
 }
 ```
+
+**字段说明**：
+- `unlockStatus`：0表示未解锁（需要购买或VIP），1表示已解锁（免费或已购买）
 
 ---
 
@@ -648,12 +655,14 @@ Authorization: {token}
 
 | 字段 | 类型 | 必填 | 说明 |
 |------|------|------|------|
+| bookId | Long | 是 | 书籍ID |
 | chapterId | Long | 是 | 章节ID |
 
 **请求示例**：
 
 ```json
 {
+  "bookId": 123,
   "chapterId": 1001
 }
 ```
@@ -663,10 +672,11 @@ Authorization: {token}
 | 字段 | 类型 | 说明 |
 |------|------|------|
 | chapterId | Long | 章节ID |
-| chapterName | String | 章节名称 |
+| chapterTitle | String | 章节标题 |
+| chapterNumber | Integer | 章节序号 |
 | content | String | 章节内容 |
-| isFree | Boolean | 是否免费 |
-| purchased | Boolean | 是否已购买 |
+| wordsCount | Integer | 字数 |
+| unlockStatus | Integer | 解锁状态：0-未解锁 1-已解锁 |
 
 **响应示例**：
 
@@ -676,13 +686,17 @@ Authorization: {token}
   "message": "success",
   "data": {
     "chapterId": 1001,
-    "chapterName": "第一章 落魄少年",
+    "chapterTitle": "第一章 落魄少年",
+    "chapterNumber": 1,
     "content": "这是一个属于斗气的世界...",
-    "isFree": true,
-    "purchased": true
+    "wordsCount": 3200,
+    "unlockStatus": 1
   }
 }
 ```
+
+**字段说明**：
+- `unlockStatus`：0表示未解锁（需要购买或VIP），1表示已解锁（免费或已购买）
 
 ## 书籍服务补充接口
 
@@ -748,9 +762,11 @@ Authorization: {token}
 
 ### 2.7 获取用户书架
 
-**接口地址**：`GET /api/book/bookshelf`
+**接口地址**：`POST /api/book/bookshelf`
 
 **请求头**：`Authorization: {token}`
+
+**请求参数**：无（发送空body或`{}`）
 
 **响应参数**：
 
