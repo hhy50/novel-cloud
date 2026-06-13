@@ -22,4 +22,9 @@ public interface BookInfoRepository {
      * Find recommended books (e.g., by view/like count or editorial picks)
      */
     List<BookInfo> findRecommendations(Integer limit);
+
+    /**
+     * Find similar books for the detail page, excluding the current book.
+     */
+    List<BookInfo> findSimilarBooks(BookInfo currentBook, Integer limit);
 }

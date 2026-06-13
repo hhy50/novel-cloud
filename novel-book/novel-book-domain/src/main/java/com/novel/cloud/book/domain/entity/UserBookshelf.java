@@ -14,6 +14,7 @@ public class UserBookshelf {
     private Long userId;
     private Long bookId;
     private Long lastChapterId;
+    private Integer showInShelf;
     private LocalDateTime lastReadTime;
     private LocalDateTime createTime;
     private LocalDateTime updateTime;

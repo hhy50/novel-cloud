@@ -26,6 +26,10 @@
         </dependency>
         <dependency>
             <groupId>com.novel.cloud</groupId>
+            <artifactId>novel-user-api</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.novel.cloud</groupId>
             <artifactId>novel-cloud-common</artifactId>
         </dependency>
         <dependency>

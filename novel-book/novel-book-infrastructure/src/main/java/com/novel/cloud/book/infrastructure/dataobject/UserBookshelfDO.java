@@ -24,6 +24,9 @@ public class UserBookshelfDO {
 
     private LocalDateTime lastReadTime;
 
+    /** 在书架显示 */
+    private Integer showInShelf;
+
     /** 创建时间 */
     private LocalDateTime createTime;
 

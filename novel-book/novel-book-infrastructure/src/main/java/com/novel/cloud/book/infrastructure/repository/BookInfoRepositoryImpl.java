@@ -61,6 +61,26 @@ public class BookInfoRepositoryImpl implements BookInfoRepository {
                 .collect(Collectors.toList());
     }
 
+    @Override
+    public List<BookInfo> findSimilarBooks(BookInfo currentBook, Integer limit) {
+        LambdaQueryWrapper<BookInfoDO> wrapper = new LambdaQueryWrapper<BookInfoDO>()
+                .ne(BookInfoDO::getId, currentBook.getId())
+                .and(w -> w.isNull(BookInfoDO::getDeletedAt).or().eq(BookInfoDO::getDeletedAt, 0))
+                .eq(BookInfoDO::getOnlineStatus, 1)
+                .eq(currentBook.getLanguage() != null && !currentBook.getLanguage().isBlank(),
+                        BookInfoDO::getLanguage, currentBook.getLanguage())
+                .orderByDesc(BookInfoDO::getIsHot)
+                .orderByDesc(BookInfoDO::getIsGreatest)
+                .orderByDesc(BookInfoDO::getTotalViews)
+                .orderByDesc(BookInfoDO::getUpdatedAt)
+                .last("limit " + limit);
+
+        List<BookInfoDO> bookInfoDOList = bookInfoMapper.selectList(wrapper);
+        return bookInfoDOList.stream()
+                .map(this::toEntity)
+                .collect(Collectors.toList());
+    }
+
     private BookInfo toEntity(BookInfoDO bookInfoDO) {
         BookInfo bookInfo = new BookInfo();
         BeanUtils.copyProperties(bookInfoDO, bookInfo);

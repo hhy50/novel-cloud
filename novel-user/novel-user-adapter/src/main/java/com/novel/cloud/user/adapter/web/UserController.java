@@ -11,10 +11,7 @@ import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 /**
- * 用户/钱包/任务 控制器。
- *
- * <p>签到接口已迁移至 {@code novel-activity} 模块：
- * {@code GET/POST /api/activity/checkin/{status,perform}}，本控制器不再提供签到端点。</p>
+ * 用户/钱包/反馈 控制器。
  */
 @Validated
 @RestController
@@ -44,16 +41,6 @@ public class UserController {
     @PostMapping("/coins/records")
     public R<CoinRecordsVo> getCoinRecords(@Valid @RequestBody CoinRecordsQueryDto params) {
         return R.ok(walletAppService.getCoinRecords(params));
-    }
-
-    @GetMapping("/tasks/daily")
-    public R<DailyTasksVo> getDailyTasks() {
-        return R.ok(walletAppService.getDailyTasks());
-    }
-
-    @PostMapping("/tasks/claim")
-    public R<ClaimTaskRewardVo> claimTaskReward(@Valid @RequestBody ClaimTaskRewardDto params) {
-        return R.ok(walletAppService.claimTaskReward(params));
     }
 
     @PostMapping("/feedback")

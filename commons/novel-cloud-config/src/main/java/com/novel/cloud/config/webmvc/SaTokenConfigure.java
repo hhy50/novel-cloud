@@ -20,7 +20,7 @@ public class SaTokenConfigure {
                 // 指定拦截路由
                 .addInclude("/**")
                 // 指定放行路由（admin 路径由独立 admin 鉴权接管，C 端登录态不参与）
-                .addExclude("/favicon.ico", "/api/user/login", "/api/activity/admin/**")
+                .addExclude("/favicon.ico", "/api/user/login", "/api/open/**", "/api/activity/admin/**")
                 // 认证函数
                 .setAuth(obj -> {
                     SaRouter.match("/**").check(r -> StpUtil.checkLogin());

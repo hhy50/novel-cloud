@@ -39,10 +39,10 @@ public class EventTrackController {
         } catch (Exception ignored) {
             // 未登录用户也允许上报事件
         }
-        
+
         // 优先使用Header中的deviceId，如果Header没有则使用body中的deviceId
         String finalDeviceId = StringUtils.hasText(deviceId) ? deviceId : params.getDeviceId();
-        
+
         eventTrackAppService.reportEvent(userId, finalDeviceId, params.getAppVersion(), params);
         return R.ok();
     }

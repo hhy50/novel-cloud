@@ -4,12 +4,14 @@ import org.mybatis.spring.annotation.MapperScan;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.cloud.client.discovery.EnableDiscoveryClient;
+import org.springframework.cloud.openfeign.EnableFeignClients;
 
 /**
  * 活动服务启动类
  */
 @SpringBootApplication(scanBasePackages = "com.novel.cloud.activity")
 @EnableDiscoveryClient
+@EnableFeignClients(basePackages = "com.novel.cloud")
 @MapperScan("com.novel.cloud.activity.infrastructure.mapper")
 public class ActivityApplication {
 

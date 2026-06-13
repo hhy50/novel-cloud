@@ -1,6 +1,6 @@
-package com.novel.cloud.user.domain.repository;
+package com.novel.cloud.activity.domain.repository;
 
-import com.novel.cloud.user.domain.entity.DailyTask;
+import com.novel.cloud.activity.domain.entity.DailyTask;
 import java.util.List;
 
 /**

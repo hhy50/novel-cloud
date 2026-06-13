@@ -59,15 +59,6 @@ public class UserBookshelfRepositoryImpl implements UserBookshelfRepository {
     }
 
     @Override
-    public void deleteByUserIdAndBookId(Long userId, Long bookId) {
-        userBookshelfMapper.delete(
-                new LambdaQueryWrapper<UserBookshelfDO>()
-                        .eq(UserBookshelfDO::getUserId, userId)
-                        .eq(UserBookshelfDO::getBookId, bookId)
-        );
-    }
-
-    @Override
     public void updateLastRead(Long userId, Long bookId, Long chapterId) {
         userBookshelfMapper.updateLastRead(userId, bookId, chapterId);
     }
@@ -79,5 +70,12 @@ public class UserBookshelfRepositoryImpl implements UserBookshelfRepository {
         UserBookshelf bookshelf = new UserBookshelf();
         BeanUtils.copyProperties(bookshelfDO, bookshelf);
         return bookshelf;
+    }
+
+    @Override
+    public void update(UserBookshelf bookshelf) {
+        UserBookshelfDO bookshelfDO = new UserBookshelfDO();
+        BeanUtils.copyProperties(bookshelf, bookshelfDO);
+        userBookshelfMapper.updateById(bookshelfDO);
     }
 }

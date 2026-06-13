@@ -14,8 +14,6 @@ public interface UserBookshelfRepository {
 
     void save(UserBookshelf bookshelf);
 
-    void deleteByUserIdAndBookId(Long userId, Long bookId);
-
     void updateLastRead(Long userId, Long bookId, Long chapterId);
 
     /**
@@ -23,4 +21,6 @@ public interface UserBookshelfRepository {
      * （隐式加入书架场景）。
      */
     UserBookshelf addOrUpdate(Long userId, Long bookId);
+
+    void update(UserBookshelf bookshelf);
 }

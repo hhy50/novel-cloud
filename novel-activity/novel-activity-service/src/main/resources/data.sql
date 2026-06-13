@@ -17,3 +17,11 @@ INSERT INTO activity_checkin_config (
     '[{"days":3,"bonus":30,"name":"连续3天奖励"},{"days":5,"bonus":50,"name":"连续5天奖励"},{"days":7,"bonus":100,"name":"完美周奖励"}]',
     '2024-01-01 00:00:00', NULL, 1
 );
+
+-- 插入默认每日任务配置
+INSERT INTO t_daily_task (
+    task_code, task_name, task_desc,
+    reward_coins, reward_points, target_count, sort_order, status
+) VALUES
+    ('READ', '每日阅读', '完成每日阅读任务', 10, 10, 1, 1, 1),
+    ('CHECKIN', '每日签到', '完成每日签到任务', 5, 5, 1, 2, 1);

@@ -1,4 +1,4 @@
-package com.novel.cloud.user.dto;
+package com.novel.cloud.activity.dto;
 
 import jakarta.validation.constraints.NotNull;
 import lombok.Data;

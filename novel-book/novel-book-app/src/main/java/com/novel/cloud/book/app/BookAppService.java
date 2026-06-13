@@ -9,6 +9,7 @@ import com.novel.cloud.book.dto.response.*;
 import com.novel.cloud.book.dto.vo.BookChapterVo;
 import com.novel.cloud.book.dto.vo.BookstoreBookVo;
 import com.novel.cloud.book.dto.vo.BookstoreSectionVo;
+import com.novel.cloud.book.dto.vo.RecommendBookItemVo;
 import com.novel.cloud.common.util.MetadataContext;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -47,6 +48,17 @@ public class BookAppService {
         }
         List<BookChapter> bookChapterList = bookDomainService.getBookChapterList(bookId, 10);
         return toBookDetailResp(bookInfo, bookChapterList);
+    }
+
+    public BookSimilarBooksResp getBookDetailRecommendations(BookSimilarBooksQueryReq params) {
+        int limit = normalizeRecommendLimit(params.getLimit());
+        List<BookInfo> books = bookDomainService.getSimilarBooks(params.getBookId(), limit);
+
+        BookSimilarBooksResp resp = new BookSimilarBooksResp();
+        resp.setItems(books.stream()
+                .map(this::toRecommendBookItemVo)
+                .toList());
+        return resp;
     }
 
     public BookChapterListResp getBookChapterList(BookChapterListQueryReq params) {
@@ -105,6 +117,22 @@ public class BookAppService {
         vo.setScore(book.getScore());
         vo.setTotalChapters(book.getTotalChapters());
         return vo;
+    }
+
+    private RecommendBookItemVo toRecommendBookItemVo(BookInfo book) {
+        RecommendBookItemVo vo = new RecommendBookItemVo();
+        vo.setBookId(book.getId());
+        vo.setTitle(book.getName());
+        vo.setSubtitle(book.getAuthor());
+        vo.setCoverUrl(book.getCover());
+        return vo;
+    }
+
+    private int normalizeRecommendLimit(Integer limit) {
+        if (limit == null || limit <= 0) {
+            return 8;
+        }
+        return Math.min(limit, 20);
     }
 
     private BookDetailResp toBookDetailResp(BookInfo bookInfo, List<BookChapter> chapters) {

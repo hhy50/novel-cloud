@@ -8,9 +8,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.time.LocalDate;
 import java.util.List;
-import java.util.Map;
 import java.util.stream.Collectors;
 
 /**
@@ -25,8 +23,6 @@ public class WalletAppService {
 
     private final UserWalletRepository userWalletRepository;
     private final CoinRecordRepository coinRecordRepository;
-    private final DailyTaskRepository dailyTaskRepository;
-    private final UserTaskRecordRepository userTaskRecordRepository;
 
     public UserProfileVo getUserProfile() {
         Long userId = StpUtil.getLoginIdAsLong();
@@ -82,96 +78,6 @@ public class WalletAppService {
         return result;
     }
 
-    public DailyTasksVo getDailyTasks() {
-        Long userId = StpUtil.getLoginIdAsLong();
-        LocalDate today = LocalDate.now();
-
-        List<DailyTask> tasks = dailyTaskRepository.findAllActive();
-        List<UserTaskRecord> records = userTaskRecordRepository.findByUserIdAndDate(userId, today);
-
-        Map<Long, UserTaskRecord> recordMap = records.stream()
-                .collect(Collectors.toMap(UserTaskRecord::getTaskId, r -> r));
-
-        List<DailyTaskVo> taskVos = tasks.stream()
-                .map(task -> {
-                    UserTaskRecord record = recordMap.get(task.getId());
-                    DailyTaskVo vo = new DailyTaskVo();
-                    vo.setTaskId(task.getId());
-                    vo.setTaskCode(task.getTaskCode());
-                    vo.setTaskName(task.getTaskName());
-                    vo.setTaskDesc(task.getTaskDesc());
-                    vo.setRewardCoins(task.getRewardCoins());
-                    vo.setRewardPoints(task.getRewardPoints());
-                    vo.setTargetCount(task.getTargetCount());
-
-                    if (record != null) {
-                        vo.setCurrentCount(record.getCurrentCount());
-                        vo.setCompleted(record.getCompleted());
-                        vo.setRewardClaimed(record.getRewardClaimed());
-                    } else {
-                        vo.setCurrentCount(0);
-                        vo.setCompleted(false);
-                        vo.setRewardClaimed(false);
-                    }
-                    return vo;
-                })
-                .collect(Collectors.toList());
-
-        int completedCount = (int) taskVos.stream().filter(DailyTaskVo::getRewardClaimed).count();
-
-        DailyTasksVo result = new DailyTasksVo();
-        result.setTasks(taskVos);
-        result.setCompletedCount(completedCount);
-        result.setTotalCount(tasks.size());
-        return result;
-    }
-
-    @Transactional
-    public ClaimTaskRewardVo claimTaskReward(ClaimTaskRewardDto params) {
-        Long userId = StpUtil.getLoginIdAsLong();
-        LocalDate today = LocalDate.now();
-
-        DailyTask task = dailyTaskRepository.findById(params.getTaskId());
-        if (task == null) {
-            ClaimTaskRewardVo vo = new ClaimTaskRewardVo();
-            vo.setSuccess(false);
-            vo.setMessage("Task not found");
-            return vo;
-        }
-
-        UserTaskRecord record = userTaskRecordRepository.findByUserIdAndTaskIdAndDate(
-                userId, params.getTaskId(), today);
-
-        if (record == null || !record.getCompleted()) {
-            ClaimTaskRewardVo vo = new ClaimTaskRewardVo();
-            vo.setSuccess(false);
-            vo.setMessage("Task not completed");
-            return vo;
-        }
-
-        if (record.getRewardClaimed()) {
-            ClaimTaskRewardVo vo = new ClaimTaskRewardVo();
-            vo.setSuccess(false);
-            vo.setMessage("Reward already claimed");
-            return vo;
-        }
-
-        // Update record
-        record.setRewardClaimed(true);
-        userTaskRecordRepository.updateById(record);
-
-        // Add rewards
-        addCoins(userId, task.getRewardCoins(), "TASK", "Daily task: " + task.getTaskName());
-        addPoints(userId, task.getRewardPoints(), "TASK", "Daily task: " + task.getTaskName());
-
-        ClaimTaskRewardVo vo = new ClaimTaskRewardVo();
-        vo.setSuccess(true);
-        vo.setRewardCoins(task.getRewardCoins());
-        vo.setRewardPoints(task.getRewardPoints());
-        vo.setMessage("Reward claimed successfully!");
-        return vo;
-    }
-
     // Helper methods
     private UserWallet getOrCreateWallet(Long userId) {
         UserWallet wallet = userWalletRepository.findByUserId(userId);
@@ -189,19 +95,47 @@ public class WalletAppService {
 
     @Transactional
     public void addCoins(Long userId, Integer amount, String type, String description) {
+        addReward(userId, amount, 0, type, description);
+    }
+
+    @Transactional
+    public UserRewardAddVo addReward(UserRewardAddDto dto) {
+        return addReward(dto.getUserId(), dto.getCoins(), dto.getPoints(), dto.getType(), dto.getDescription());
+    }
+
+    @Transactional
+    public UserRewardAddVo addReward(Long userId, Integer coins, Integer points, String type, String description) {
         UserWallet wallet = getOrCreateWallet(userId);
-        Long newBalance = wallet.getCoins() + amount;
-        Long newTotal = wallet.getTotalCoins() + amount;
+        int coinAmount = coins == null ? 0 : coins;
+        int pointAmount = points == null ? 0 : points;
 
-        userWalletRepository.updateCoins(userId, newBalance, newTotal);
+        Long newCoins = wallet.getCoins() + coinAmount;
+        Long newTotalCoins = wallet.getTotalCoins() + coinAmount;
+        Long newPoints = wallet.getPoints() + pointAmount;
+        Long newTotalPoints = wallet.getTotalPoints() + pointAmount;
 
-        CoinRecord record = new CoinRecord();
-        record.setUserId(userId);
-        record.setAmount((long) amount);
-        record.setBalance(newBalance);
-        record.setType(type);
-        record.setDescription(description);
-        coinRecordRepository.save(record);
+        if (coinAmount != 0) {
+            userWalletRepository.updateCoins(userId, newCoins, newTotalCoins);
+
+            CoinRecord record = new CoinRecord();
+            record.setUserId(userId);
+            record.setAmount((long) coinAmount);
+            record.setBalance(newCoins);
+            record.setType(type);
+            record.setDescription(description);
+            coinRecordRepository.save(record);
+        }
+
+        if (pointAmount != 0) {
+            userWalletRepository.updatePoints(userId, newPoints, newTotalPoints);
+        }
+
+        UserRewardAddVo vo = new UserRewardAddVo();
+        vo.setCoins(newCoins);
+        vo.setPoints(newPoints);
+        vo.setTotalCoins(newTotalCoins);
+        vo.setTotalPoints(newTotalPoints);
+        return vo;
     }
 
     @Transactional
@@ -221,12 +155,5 @@ public class WalletAppService {
         record.setType(type);
         record.setDescription(description);
         coinRecordRepository.save(record);
-    }
-
-    private void addPoints(Long userId, Integer amount, String type, String description) {
-        UserWallet wallet = getOrCreateWallet(userId);
-        Long newBalance = wallet.getPoints() + amount;
-        Long newTotal = wallet.getTotalPoints() + amount;
-        userWalletRepository.updatePoints(userId, newBalance, newTotal);
     }
 }

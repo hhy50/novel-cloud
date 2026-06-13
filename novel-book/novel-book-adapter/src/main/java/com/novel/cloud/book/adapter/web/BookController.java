@@ -28,6 +28,11 @@ public class BookController {
         return R.ok(bookAppService.getBookDetail(params));
     }
 
+    @PostMapping("/detail/recommendations")
+    public R<BookSimilarBooksResp> getBookDetailRecommendations(@Valid @RequestBody BookSimilarBooksQueryReq params) {
+        return R.ok(bookAppService.getBookDetailRecommendations(params));
+    }
+
     @PostMapping("/chapters")
     public R<BookChapterListResp> getBookChapterList(@Valid @RequestBody BookChapterListQueryReq params) {
         return R.ok(bookAppService.getBookChapterList(params));

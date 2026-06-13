@@ -66,6 +66,14 @@ public class BookDomainService {
         return bookInfoRepository.findById(bookId);
     }
 
+    public List<BookInfo> getSimilarBooks(Long bookId, Integer limit) {
+        BookInfo currentBook = bookInfoRepository.findById(bookId);
+        if (currentBook == null) {
+            return List.of();
+        }
+        return bookInfoRepository.findSimilarBooks(currentBook, limit);
+    }
+
     public List<BookChapter> getBookChapterList(Long bookId, Integer limit) {
         List<BookChapter> chapters = bookChapterRepository.findByBookId(bookId, limit);
         for (BookChapter chapter : chapters) {

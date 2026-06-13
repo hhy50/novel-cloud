@@ -36,6 +36,7 @@ public class BookshelfDomainService {
         List<UserBookshelf> bookshelfList = userBookshelfRepository.findByUserId(userId);
 
         return bookshelfList.stream()
+                .filter(item -> item.getShowInShelf() == 1)
                 .map(bookshelf -> {
                     BookInfo bookInfo = bookInfoRepository.findById(bookshelf.getBookId());
                     if (bookInfo == null) {
@@ -53,6 +54,10 @@ public class BookshelfDomainService {
     public boolean addToBookshelf(Long userId, Long bookId) {
         UserBookshelf existing = userBookshelfRepository.findByUserIdAndBookId(userId, bookId);
         if (existing != null) {
+            if (existing.getShowInShelf() == 0) {
+                existing.setShowInShelf(1);
+                userBookshelfRepository.update(existing);
+            }
             return true;
         }
 
@@ -64,11 +69,18 @@ public class BookshelfDomainService {
         UserBookshelf bookshelf = new UserBookshelf();
         bookshelf.setUserId(userId);
         bookshelf.setBookId(bookId);
+        bookshelf.setShowInShelf(1);
         userBookshelfRepository.save(bookshelf);
         return true;
     }
 
     public void removeFromBookshelf(Long userId, Long bookId) {
-        userBookshelfRepository.deleteByUserIdAndBookId(userId, bookId);
+        UserBookshelf existing = userBookshelfRepository.findByUserIdAndBookId(userId, bookId);
+        if (existing != null) {
+            if (existing.getShowInShelf() == 1) {
+                existing.setShowInShelf(0);
+                userBookshelfRepository.update(existing);
+            }
+        }
     }
 }

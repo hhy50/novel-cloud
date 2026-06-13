@@ -1,10 +1,10 @@
-package com.novel.cloud.user.infrastructure.repository;
+package com.novel.cloud.activity.infrastructure.repository;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
-import com.novel.cloud.user.domain.entity.DailyTask;
-import com.novel.cloud.user.domain.repository.DailyTaskRepository;
-import com.novel.cloud.user.infrastructure.dataobject.DailyTaskDO;
-import com.novel.cloud.user.infrastructure.mapper.DailyTaskMapper;
+import com.novel.cloud.activity.domain.entity.DailyTask;
+import com.novel.cloud.activity.domain.repository.DailyTaskRepository;
+import com.novel.cloud.activity.infrastructure.dataobject.DailyTaskDO;
+import com.novel.cloud.activity.infrastructure.mapper.DailyTaskMapper;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.BeanUtils;
 import org.springframework.stereotype.Component;
